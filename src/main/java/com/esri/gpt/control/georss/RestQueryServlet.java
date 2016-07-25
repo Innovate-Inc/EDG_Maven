@@ -147,34 +147,56 @@ public class RestQueryServlet extends BaseServlet {
     // execute the query, write the response
     try {
       if (format == RestQueryServlet.ResponseFormat.xjson) {
+    	
+          // init query
+          query.setReturnables(new CoreQueryables(context).getFull());
+          toSearchCriteria(request, context, query);
+          
+          IFeedRecords result = JsonSearchEngine.createInstance().search(request, response, context, query);
+          if (result.isEmpty()) {
+              response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+          }
+
         String callback = request.getParameter("callback");
         if (callback != null) {
           printWriter.print(callback + "(");
         }
 
         // init query
-        query.setReturnables(new CoreQueryables(context).getFull());
+       /* query.setReturnables(new CoreQueryables(context).getFull());
         toSearchCriteria(request, context, query);
         
         
-        feedWriter.write(JsonSearchEngine.createInstance().search(request, response, context, query));
+        feedWriter.write(JsonSearchEngine.createInstance().search(request, response, context, query));*/
 
         if (callback != null) {
           printWriter.print(")");
         }
 
       }else if (format == RestQueryServlet.ResponseFormat.dcat) {
+          // The following part of the code has been disabled since DCAT content
+          // is being cached.
+          query.setReturnables(new CoreQueryables(context).getFull());
+          toSearchCriteria(request, context, query);
+          
+          IFeedRecords result = DcatJsonSearchEngine.createInstance().search(request, response, context, query);
+          if (result.isEmpty()) {
+              response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+          }
+
         String callback = request.getParameter("callback");
         if (callback != null) {
           printWriter.print(callback + "(");
         }
+        feedWriter.write(result);
 
-        // init query
+
+       /* // init query
         query.setReturnables(new CoreQueryables(context).getFull());
         toSearchCriteria(request, context, query);
         
         
-        feedWriter.write(DcatJsonSearchEngine.createInstance().search(request, response, context, query));
+        feedWriter.write(DcatJsonSearchEngine.createInstance().search(request, response, context, query));*/
 
         if (callback != null) {
           printWriter.print(")");
@@ -182,6 +204,10 @@ public class RestQueryServlet extends BaseServlet {
 
       } else {
         SearchResult result = executeQuery1(request, context, msgBroker, query);
+        if (!result.getHasRecords() && !Val.chkStr(request.getParameter("uuid")).isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
+
         if (feedWriter instanceof FeedWriter2) {
           ((FeedWriter2) feedWriter).write(result);
         } else if (feedWriter instanceof HtmlAdvancedWriter) {
@@ -271,7 +297,7 @@ public class RestQueryServlet extends BaseServlet {
       // generate the CSW request string
       String cswRequest = "";
       try {
-        GetRecordsGenerator grg = new GetRecordsGenerator(context);
+        GetRecordsGenerator grg = new GetRecordsGenerator();
         cswRequest = grg.generateCswRequest(query);
       } catch (Exception e) {
         throw new SearchException(e);
@@ -310,6 +336,10 @@ public class RestQueryServlet extends BaseServlet {
     OpenSearchProperties osProps = new OpenSearchProperties();
     osProps.setShortName(messageBroker.retrieveMessage("catalog.openSearch.shortName"));
     osProps.setDescriptionURL(osURL);
+    osProps.setRestURL(basePath+"/rest/find/document");
+    osProps.setSearchText(request.getParameter("searchText"));
+    osProps.setBbox(request.getParameter("bbox"));
+    osProps.setClientId(request.getParameter("clientId"));
     osProps.setNumberOfHits(result.getMaxQueryHits());
     osProps.setStartRecord(query.getFilter().getStartRecord());
     osProps.setRecordsPerPage(query.getFilter().getMaxRecords());

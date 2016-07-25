@@ -29,23 +29,12 @@ $(document).ready(function(){
 	);
 	
 	$("input[id='frmSearchCriteria:scText']").keyup( function() {
-		var check = document.getElementById("frmSearchCriteria:searchSynonym");
-		var enabled = check!=null? check.checked: false;
-		if (enabled) {
-			return false;
-		}
-		var element = document.getElementById("frmSearchCriteria:pngTagbox");
-		if (typeof(element) != 'undefined' && element != null)
-		{
-			element.parentNode.removeChild(element);
-		}
 		var searchText = this.value;
 		var sMatches = "";
 		var nMaxMatches = 10;
 		var nCountMatches = 0;
 		
 		if (searchText.length>=2) {
-
 			jQuery.each(Hints, function() {
 		  	  if (this.name.indexOf(searchText)>-1) {
 		  		  if (nCountMatches < nMaxMatches) {

@@ -18,7 +18,6 @@
 %>
 
 <%
-//String VER = "v1";
 String PROD = "prod";
 %>
 

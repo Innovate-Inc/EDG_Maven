@@ -15,7 +15,6 @@
 --%>
 <% // searchjs.jsp - Provides the Javascript for the catalog search widget %>
 <%@page language="java" contentType="text/javascript; charset=UTF-8" session="false"%>
-<%@ page import="java.net.URLDecoder"%>
 <%@taglib prefix="f" uri="http://java.sun.com/jsf/core"%>
 <%
   com.esri.gpt.framework.jsf.MessageBroker msg = 
@@ -24,10 +23,6 @@
   String namespace = "gpt";
   String cssNamespace = "gpt";
   String caption = msg.retrieveMessage("catalog.widget.search.caption");
-  // JSS 20120106 Use title parm if there
-  String titleParm = chkStr(request.getParameter("title"));
-  if (titleParm.length() > 0)
-     caption = titleParm;
   String title = caption;
   String label = msg.retrieveMessage("catalog.widget.search.label");
   String tipSearch = msg.retrieveMessage("catalog.widget.search.tip.search");
@@ -38,15 +33,10 @@
   String msgNoMatch = msg.retrieveMessage("catalog.widget.search.msg.noMatch");
   String about = msg.retrieveMessage("catalog.widget.search.about");
   
-  String frameworkUrl = "//js.arcgis.com/3.13/init.js";
+  String frameworkUrl = "http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.5";
   String baseUrl = com.esri.gpt.framework.context.RequestContext.resolveBaseContextPath(request);
   String restUrl = baseUrl+"/rest/find/document";
   String cssUrl = baseUrl+"/widgets/widgets.css";
-  // JSS 20110609 Use css parm if there
-  String cssParm = chkStr(request.getParameter("css"));
-  if (cssParm.length() > 0)
-      cssUrl = URLDecoder.decode(cssParm);
-
   String imagesUrl = baseUrl+"/widgets/images";
   String searchProxyUrl = baseUrl+"/widgets/searchProxy.jsp";
   String requestPath = baseUrl+"/widgets/searchjs.jsp";
@@ -68,7 +58,6 @@
     String propPublisher = chkStr(request.getParameter("publisher"));
     String propSource = chkStr(request.getParameter("source"));
   String propOrderBy = chkStr(request.getParameter("orderBy"));
-  String propOwner = chkStr(request.getParameter("owner"));
   
   String fLoadFramework = "_gLoadSearchFramework"+System.currentTimeMillis();
   String fLoadStyle = "_gLoadSearchStyle"+System.currentTimeMillis();
@@ -164,7 +153,6 @@ function <%=fStartup%>() {
 	  // default configuration
 	  var _gSearchNamespace = "<%=namespace%>";
 	  var _gSearchRequestPath = "<%=requestPath%>";  
-          
 	  
 		var _gSearchParams = {
 		  dockable: false,
@@ -198,7 +186,6 @@ function <%=fStartup%>() {
       propPublisher: "<%=propPublisher%>",
       propSource: "<%=propSource%>",
       propOrderBy: "<%=propOrderBy%>",
-      propOwner: "<%=propOwner%>",
       
 		  restUrl: "<%=restUrl%>",
 		  searchProxyUrl: "<%=searchProxyUrl%>",
@@ -229,7 +216,6 @@ function <%=fStartup%>() {
       
         // find the script element
         var insertionNode = null;
-        
         dojo.query("script").forEach(function(item) {
           if (item.src.indexOf(_gSearchRequestPath) == 0) {
             if (insertionNode == null) insertionNode = item;
@@ -388,7 +374,7 @@ function <%=fStartup%>() {
 	          elControl.appendChild(elBtn);
 	          dojo.connect(elBtn,"onclick",this,"asRSS");
 	          
-	          elBtn = makeIcon("//www.google.com/earth/images/google_earth_link.gif",this.tipKML);
+	          elBtn = makeIcon("http://www.google.com/earth/images/google_earth_link.gif",this.tipKML);
 	          elControl.appendChild(elBtn);
 	          dojo.connect(elBtn,"onclick",this,"asKML");
 	
@@ -486,9 +472,8 @@ function <%=fStartup%>() {
         sUrl = appendParam(sUrl,"publisher",this.propPublisher);
         sUrl = appendParam(sUrl,"source",this.propSource);
         sUrl = appendParam(sUrl,"orderBy",this.propOrderBy);
-        sUrl = appendParam(sUrl,"owner",this.propOwner);
-
-        return sUrl;
+        
+        return sUrl; 
       },
 		  	  	  	     
 		  // handle a click on an achor button

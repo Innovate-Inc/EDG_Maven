@@ -352,7 +352,291 @@ $(document).ready(function(){
 							</div>
 						</div>
 
+						<div class="container">
+							<h2>Featured Data Products</h2>
+							<ul class="nav nav-tabs">
+								<li class="active"><a data-toggle="tab"
+									href="#climateChange">Climate Change</a></li>
+								<li><a data-toggle="tab" href="#envJustice">Environmental
+										Justice</a></li>
+								<li><a data-toggle="tab" href="#facData">Facility Data</a></li>
+							</ul>
+
+							<div class="tab-content">
+
+								<div id="climateChange" class="tab-pane fade in active">
+									<div class="row" style="padding-top: 22px">
+										<%
+											try {
+
+													JSONArray arr = obj.getJSONArray("records");
+													int counter = 0;
+													for (int i = 0; i < arr.length(); i++) {
+														JSONObject record = arr.getJSONObject(i);
+														JSONArray links = record.getJSONArray("links");
+														String title = record.getString("title");
+														String uuid = record.getString("id");
+														if (counter == 6) {
+															break;
+														}
+														String hrefDet="../skins/themes/blue/images/generalicon100x120.png";
+														for (int j = 0; j < links.length(); j++) {
+
+															JSONObject details = links.getJSONObject(j);
+															String typeDet = details.getString("type");
+
+															if ("thumbnail".equalsIgnoreCase(typeDet)) {
+																hrefDet = details.getString("href");
+															}
+														}
+														counter++;
+										%>
+										<a
+											href="https://edg.epa.gov/metadata/catalog/search/resource/details.page?uuid=<%=uuid%>"
+											target="_blank">
+											<div class="col-md-2">
+												<div class="thumbnail">
+													<img src="<%=hrefDet%>" data-toggle="tooltip" alt=""
+														height="60" width="60" title="<%=title%>">
+													<div class="caption" style="word-wrap: break-word; font-size:14px;"><%=title%></div>
+												</div>
+											</div>
+										</a>
+										<%
+										}
+
+												} catch (Exception e) {
+													System.out.println("print catch:" + e);
+												}
+										%>
 						
+									</div>
+									<div class="col-md-12 col-sm-12 text-right">
+										<p>
+											<a href="javascript: void(0)" onclick="javascript:executeSearchAction()">See More</a>
+										</p>
+										<p></p>
+									</div>
+								</div>
+
+								<div id="envJustice" class="tab-pane fade">
+									<div class="row" style="padding-top: 22px">
+										<%
+											try {
+
+													JSONArray arr = obj.getJSONArray("records");
+													int counter = 0;
+													for (int i = 0; i < arr.length(); i++) {
+														JSONObject record = arr.getJSONObject(i);
+														JSONArray links = record.getJSONArray("links");
+														String title = record.getString("title");
+														String uuid = record.getString("id");
+														if (counter == 6) {
+															break;
+														}
+														String hrefDet="../skins/themes/blue/images/generalicon100x120.png";
+														for (int j = 0; j < links.length(); j++) {
+
+															JSONObject details = links.getJSONObject(j);
+															String typeDet = details.getString("type");
+
+															if ("thumbnail".equalsIgnoreCase(typeDet)) {
+																hrefDet = details.getString("href");
+															}
+														}
+														counter++;
+										%>
+										<a
+											href="https://edg.epa.gov/metadata/catalog/search/resource/details.page?uuid=<%=uuid%>"
+											target="_blank">
+											<div class="col-md-2">
+												<div class="thumbnail">
+													<img src="<%=hrefDet%>" data-toggle="tooltip" alt=""
+														height="60" width="60" title="<%=title%>">
+													<div class="caption" style="word-wrap: break-word; font-size:14px;"><%=title%></div>
+												</div>
+											</div>
+										</a>
+										<%
+										}
+
+												} catch (Exception e) {
+													System.out.println("print catch:" + e);
+												}
+										%>
+						
+									</div>
+									<div class="col-md-12 col-sm-12 text-right">
+										<p>
+											<a href="javascript: void(0)" onclick="javascript:executeSearchAction()">See More</a>
+										</p>
+										<p></p>
+									</div>
+								</div>
+							
+								<div id="facData" class="tab-pane fade">
+		                        <div class="row" style="padding-top: 22px">
+										<%
+											try {
+
+													JSONArray arr = obj.getJSONArray("records");
+													int counter = 0;
+													for (int i = 0; i < arr.length(); i++) {
+														JSONObject record = arr.getJSONObject(i);
+														JSONArray links = record.getJSONArray("links");
+														String title = record.getString("title");
+														String uuid = record.getString("id");
+														if (counter == 6) {
+															break;
+														}
+														String hrefDet="../skins/themes/blue/images/generalicon100x120.png";
+														for (int j = 0; j < links.length(); j++) {
+
+															JSONObject details = links.getJSONObject(j);
+															String typeDet = details.getString("type");
+
+															if ("thumbnail".equalsIgnoreCase(typeDet)) {
+																hrefDet = details.getString("href");
+															}
+														}
+														counter++;
+										%>
+										<a
+											href="https://edg.epa.gov/metadata/catalog/search/resource/details.page?uuid=<%=uuid%>"
+											target="_blank">
+											<div class="col-md-2">
+												<div class="thumbnail">
+													<img src="<%=hrefDet%>" data-toggle="tooltip" alt=""
+														height="60" width="60" title="<%=title%>">
+													<div class="caption" style="word-wrap: break-word; font-size:14px;"><%=title%></div>
+												</div>
+											</div>
+										</a>
+										<%
+										}
+
+												} catch (Exception e) {
+													System.out.println("print catch:" + e);
+												}
+										%>
+						
+									</div>
+									<div class="col-md-12 col-sm-12 text-right">
+										<p>
+											<a href="javascript: void(0)" onclick="javascript:executeSearchAction()">See More</a>
+										</p>
+										<p></p>
+									</div>
+								</div>
+									</div>
+								</div>
+
+							</div>
+						</div>
+					</div>
+
+	<%-- 					<section id="service">
+							<div class="container">
+								<div class="row">
+									<div class="col-md-12">
+										<div class="title wow pulse" data-wow-delay=".5s">
+											<h2>Featured Datasets</h2>
+											<p>Here you will find our most popular datsets</p>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-md-4 col-sm-4">
+										<div class="block wow fadeInLeft" data-wow-delay=".7s">
+											<img src="../skins/themes/blue/images/climate_square.jpg"
+												alt="">
+											<h3>Climate Change</h3>
+											<p>Lorem Ipsum is simply dummy text of the printing and
+												typesetting industry. Lorem Ipsum has been typesetting
+												industry</p>
+										</div>
+									</div>
+									<div class="col-md-4 col-sm-4">
+										<div class="block wow fadeInLeft" data-wow-delay=".8s">
+											<img src="../skins/themes/blue/images/ej_square.jpg" alt="">
+											<h3>Environmental Justice</h3>
+											<p>Lorem Ipsum is simply dummy text of the printing and
+												typesetting industry. Lorem Ipsum has been typesetting
+												industry</p>
+										</div>
+									</div>
+									<div class="col-md-4 col-sm-4">
+										<div class="block wow fadeInLeft" data-wow-delay="1.1s">
+											<img src="../skins/themes/blue/images/facility_square.jpg"
+												alt="">
+											<h3>Facility Data</h3>
+											<p>Lorem Ipsum is simply dummy text of the printing and
+												typesetting industry. Lorem Ipsum has been typesetting
+												industry</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</section> --%>
+					<div class="container">
+						<h2>Popular Datasets</h2>
+									<div class="row" style="padding-top: 22px">
+										<%
+											try {
+
+													JSONArray arr = obj.getJSONArray("records");
+													int counter = 0;
+													for (int i = 0; i < arr.length(); i++) {
+														JSONObject record = arr.getJSONObject(i);
+														JSONArray links = record.getJSONArray("links");
+														String title = record.getString("title");
+														String uuid = record.getString("id");
+														if (counter == 6) {
+															break;
+														}
+														String hrefDet="../skins/themes/blue/images/generalicon100x120.png";
+														for (int j = 0; j < links.length(); j++) {
+
+															JSONObject details = links.getJSONObject(j);
+															String typeDet = details.getString("type");
+
+															if ("thumbnail".equalsIgnoreCase(typeDet)) {
+																hrefDet = details.getString("href");
+															}
+														}
+														counter++;
+										%>
+										<a
+											href="https://edg.epa.gov/metadata/catalog/search/resource/details.page?uuid=<%=uuid%>"
+											target="_blank">
+											<div class="col-md-2">
+												<div class="thumbnail">
+													<img src="<%=hrefDet%>" data-toggle="tooltip" alt=""
+														height="60" width="60" title="<%=title%>">
+													<div class="caption" style="word-wrap: break-word; font-size:14px;"><%=title%></div>
+												</div>
+											</div>
+										</a>
+										<%
+										}
+
+												} catch (Exception e) {
+													System.out.println("print catch:" + e);
+												}
+										%>
+						
+									</div>
+												<div class="col-md-12 col-sm-12 text-right">
+										<p>
+											<a href="javascript: void(0)" onclick="javascript:executeSearchAction()">See More</a>
+										</p>
+										<p></p>
+									</div>
+									</div>
+						
+
+					</div>
+				</div>
 												
 						<section id="feature">
 							<div class="container">

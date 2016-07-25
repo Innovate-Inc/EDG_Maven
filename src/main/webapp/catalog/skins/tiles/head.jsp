@@ -23,11 +23,10 @@
 <f:verbatim>
 
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<!--meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" /-->
+<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
 <link rel="search" type="application/opensearchdescription+xml" 
   title="<%=com.esri.gpt.framework.jsf.PageContext.extract().getResourceMessage("catalog.openSearch.shortName")%>"
   href="<%=request.getContextPath()%>/openSearchDescription" />
-
 
 <script type="text/javascript">
 
@@ -75,13 +74,10 @@ function mainOpenInternalLink(oLink,sHref) {
 	}
 }
 
-
-
 function mainOpenPageHelp() {
 	openHelp("GPT_Context_Help", "<%=com.esri.gpt.framework.jsf.PageContext.extract().getPageId()%>");
 }
-
-
+// Global variable to be used for map viewer
 var mainGptMapViewer = new GptMapViewer(mainGptMvsUrl);
 
 /**
@@ -100,14 +96,4 @@ function mainOpenDefaultMapViewer() {
 }
 
 </script>
-<script type="text/javascript" src="/metadata/catalog/js/epa-core-v4.js"></script>
-<!-- Google Tag Manager 
-<noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-L8ZB"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-L8ZB');</script>
-<!-- End Google Tag Manager -->
 </f:verbatim>

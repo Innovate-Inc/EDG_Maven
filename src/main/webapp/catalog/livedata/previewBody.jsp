@@ -71,14 +71,11 @@ private String makeSafeUrl(String contextPath, String infoUrl) {
 <%-- Info section --%>
 <f:verbatim>
 <% if (LiveDataController.getCurrentInstance().getInfoUrl().length() > 0) {%>
-
-<script type="text/javascript" src="../../js/inno/metrics.js"></script>
-
 <div class="section previewInfoSection">
-  <iframe src="<%=Val.escapeXmlForBrowser(LiveDataController.getCurrentInstance().getInfoUrl())%>&xsl=metadata_to_html_full"
+  <iframe src="<%=makeSafeUrl(prvContextPath,Val.escapeXmlForBrowser(LiveDataController.getCurrentInstance().getInfoUrl()))%>" 
           class="previewInfoFrame"
-          frameborder="0"
-          onload="innoHookUpFrame(this);" ></iframe>
+          frameborder="0" 
+          id="infoFrame"></iframe>
 </div>
 <%}%>
 </f:verbatim>

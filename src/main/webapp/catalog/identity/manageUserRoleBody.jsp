@@ -41,7 +41,6 @@
 	String umSearchUser = umMsgBroker.retrieveMessage("catalog.manage.user.role.searchUser");
 	String umSearch = umMsgBroker.retrieveMessage("catalog.manage.user.search");
 	String umListAGroup = umMsgBroker.retrieveMessage("catalog.manage.user.listAGroup");
-	//String VER124 = "v1.2.4";
 	String PROD = "prod";
 %>
 

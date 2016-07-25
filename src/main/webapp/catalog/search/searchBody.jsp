@@ -13,7 +13,6 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 --%>
-<%@page import="java.util.ArrayList"%>
 <%// searchBody.jsp - Create search criteria (JSF body)%>
 <%@ taglib prefix="f" uri="http://java.sun.com/jsf/core" %>
 <%@ taglib prefix="h" uri="http://java.sun.com/jsf/html" %>
@@ -22,20 +21,7 @@
 <f:verbatim>
   <style type="text/css">
   .columnsTable td {vertical-align: top;}
-  
-  .grid td, .grid th{
-        line-height: 18px;
-    }
-   
 </style>
-
-
-<div id="dialog-form-member-tree" title="Compilation members">
-    <div style="font-weight: bold;">Please pan around if you are unable to see all members of the compilation.</div>
-    <div style="clear:both;"></div>
-    <div id="infovis"></div>
-</div>
-
 </f:verbatim>
 
 <%
@@ -44,32 +30,7 @@
   // loading the jsapi within the <head> tag reduces flicker on the search page
   com.esri.gpt.framework.ArcGIS.InteractiveMap imConfig = com.esri.gpt.framework.context.RequestContext
     .extract(request).getApplicationConfiguration().getInteractiveMap();
-  
-  String contextPath = request.getContextPath();
-  String searchTextParam = "";
-  if (request.getParameter("searchText")!=null){
-	searchTextParam = request.getParameter("searchText").toString();
-  }
 %>
- 
-<script>var contextPath = "<%=contextPath%>";</script>
-<link rel="stylesheet" href="../../catalog/js/jquery-ui/css/ui-lightness/jquery-ui.css" />
-<script type="text/javascript" src="../../catalog/js/jquery-ui/js/jquery.js"></script>
-<script type="text/javascript" src="../../catalog/js/jquery-ui/js/jquery-ui.js"></script>
-<script type="text/javascript" src="../../catalog/js/jquery-ui/js/ui/jquery.ui.core.js"></script>
-<script type="text/javascript" src="../../catalog/js/jquery-ui/js/ui/jquery.ui.widget.js"></script>
-<script type="text/javascript" src="../../catalog/js/jquery-ui/js/ui/jquery.ui.mouse.js"></script>
-<script type="text/javascript" src="../../catalog/js/jquery-ui/js/ui/jquery.ui.button.js"></script>
-<script type="text/javascript" src="../../catalog/js/jquery-ui/js/ui/jquery.ui.draggable.js"></script>
-<script type="text/javascript" src="../../catalog/js/jquery-ui/js/ui/jquery.ui.position.js"></script>
-<script type="text/javascript" src="../../catalog/js/jquery-ui/js/ui/jquery.ui.resizable.js"></script>
-<script type="text/javascript" src="../../catalog/js/jquery-ui/js/ui/jquery.ui.dialog.js"></script>
-<script type="text/javascript" src="../../catalog/js/jquery-ui/js/ui/jquery.effects.core.js"></script>
-<script type="text/javascript" src="../../catalog/js/jquery-ui/js/external/jquery.bgiframe-2.1.2.js"></script>
-<script type="text/javascript" src="../../catalog/js/Jit/jit-yc.js"></script>
-<script type="text/javascript" src="../../catalog/collection/js/manageBody.js"></script>
-<!--script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/dojo/1.9.3/dojo/dojo.js'></script-->
-
 <script type="text/javascript">
   dojo.require("dojo.cookie");
   dojo.require("dijit.form.Form");
@@ -78,6 +39,19 @@
   
   var _frmDjSearchCriteria = null;
   
+   	// Set the extent based on the bookmark selected. WARNING: the WKID is hardcoded to 4326.
+    function setMapExtent()	{	
+      var scEl = document.getElementById("frmSearchCriteria:scSel");
+      var extent= scEl!=null? scEl.value: null;
+      if((extent!=null)&&(extent!=""))	{
+        var selectedExtent = eval("new esri.geometry.Extent({"+gptMapConfig.mapInitialExtent+"})");
+        if(extent!=="default") {
+          selectedExtent = new esri.geometry.Extent(Number(extent.split(";")[0]),Number(extent.split(";")[1]),Number(extent.split(";")[2]),Number(extent.split(";")[3]),(new esri.SpatialReference({wkid:4326})));
+        } 
+        scMap._gptMap.zoom(selectedExtent);
+      }
+    }
+	
   function serilizeFormToCookie() {
     //dojo.cookie(_cookieLabel, dojo.formToJson("frmSearchCriteria"));
   }
@@ -152,6 +126,18 @@ dojo.declare("SearchMap", null, {
     
   },
 
+	setMapExtent:function() // Set map extent based on bookmark
+	{	var extent= document.getElementById("frmSearchCriteria:scSel").value;
+	    if((extent!=null)&&(extent!=""))
+		{	if(extent=="default")
+				selectedExtent= eval("new esri.geometry.Extent({"+gptMapConfig.mapInitialExtent+"})");
+			else
+				var selectedExtent = new esri.geometry.Extent(Number(extent.split(";")[0]),Number(extent.split(";")[1]),Number(extent.split(";")[2]),Number(extent.split(";")[3]),(new esri.SpatialReference({wkid:4326})));
+			
+			scMap._gptMap.zoom(selectedExtent);
+		}
+	},
+
   initialize: function() {
     var config = gptMapConfig;
 
@@ -188,8 +174,15 @@ dojo.declare("SearchMap", null, {
   },
 
   onMapLoaded: function() {
-    if (this._gptMap!=null) {      
-      setTimeout(dojo.hitch(this,"zoomToInitExtent",true),1000);
+    if (this._gptMap!=null) {
+      // Set the map extent based on the bookmark
+      var scSel = document.getElementById("frmSearchCriteria:scSel");
+      var extent= scSel!=null? scSel.value: null;
+      if((extent!=null)&&(extent!=""))
+        setTimeout(dojo.hitch(this,"setMapExtent",true),1000);
+      else
+        setTimeout(dojo.hitch(this,"zoomToInitExtent",true),1000);
+
       this.drawFootPrints();
       var agsMap = this._gptMap.getAgsMap();
       if (agsMap != null) {
@@ -249,7 +242,7 @@ dojo.declare("SearchMap", null, {
             symbol = new esri.symbol.SimpleFillSymbol(esri.symbol.SimpleFillSymbol.STYLE_NULL,
                      new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID,
                      new dojo.Color([255,0,0]), 2), new dojo.Color([255,255,0,0.1]));
-            graphic.setSymbol(symbol);
+            
             graphic.gptSRTag = "frmSearchCriteria:mdRecords:"+aRecordIDs[iRecord]+":_metadataMainRecordTable";
             
              if(pts[3].x == pts[2].x  && pts[3].y == pts[2].y) {
@@ -340,8 +333,8 @@ dojo.declare("SearchMap", null, {
 	  if (lMinY < -90)   {lMinY = -90;}
 	  if (lMaxY < lMinY) {tmp = lMaxY; lMaxY = lMinY; lMinY = tmp;}
 	  if (lMaxX < lMinX) {lMaxX = 180; lMinX = -180;}
-	  if (lMaxX > 180 )  {lMaxX = 180;}
-	  if(lMinX < -180 )  {lMinX = -180;}
+	  if (lMaxX > 179.99 )  {lMaxX = 179.99;}
+	  if (lMinX < -179.99 )  {lMinX = -179.99;}
 	  return new esri.geometry.Extent(lMinX,lMinY,lMaxX,lMaxY,new esri.SpatialReference({wkid:4326}));
 	},
 	
@@ -730,41 +723,8 @@ function uncheckForm() {
 			<h:panelGroup id="pngResults">
 			  <jsp:include page="/catalog/search/results.jsp" />
 			</h:panelGroup>
-			<% if (searchTextParam == ""){ %>
-				<h:panelGroup id="pngTagbox">
-					<div>
-							<%int number=5;
-								com.esri.gpt.catalog.search.SearchCriteria searchTags = new  
-
-com.esri.gpt.catalog.search.SearchCriteria();
-								ArrayList<ArrayList<String>> tagList = searchTags.getTagscloud();
-								int oriSize = 4;//5 the base size of the tags with the highest frequency
-								int lightness = 30;// the tags with the highest frequency (such as water) will be shown with the lowest lightness
-							
-								for(int i=1;i<tagList.size();i++)
-								{
-									String searchText = tagList.get(i).get(0);
-									String frequency = tagList.get(i).get(1);
-									String frequencyLevel = tagList.get(i).get(2);
-									int iFrequencyLevel = Integer.parseInt(frequencyLevel); 
-									int currentSize = oriSize - iFrequencyLevel/2;
-									//int currentSize = -2;
-									int currentLightness = lightness + iFrequencyLevel/2;
-									String strSize = Integer.toString(currentSize); 
-									String strLightness = Integer.toString(currentLightness); 
-
-							%>
-										   
-									<a  href="http://localhost:8080/metadata/rest/find/document?f=searchpage&searchText=keywords:&quot;<%=searchText%>&quot;" style="color: hsl(206,100%,<%=strLightness%>%);" title="<%=frequency%> tags"> <font size="<%=strSize%>"> <%=searchText%> | </font></a>
-
-							<%} %>
-
-					</div>
-				</h:panelGroup>	
-			<%} %>
 		</h:panelGroup>
 	</h:panelGrid>
-	
 
 </h:form>
 <f:verbatim>

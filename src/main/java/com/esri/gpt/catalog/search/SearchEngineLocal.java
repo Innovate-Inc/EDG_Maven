@@ -26,6 +26,8 @@ import com.esri.gpt.server.csw.components.OperationContext;
 import com.esri.gpt.server.csw.components.OperationResponse;
 import com.esri.gpt.server.csw.components.ProviderFactoryHelper;
 import com.esri.gpt.server.csw.provider3.local.ProviderFactory;
+import com.esri.gpt.framework.security.credentials.UsernamePasswordCredentials;
+import com.esri.gpt.framework.security.credentials.Credentials;
 
 import java.io.StringReader;
 import java.util.HashMap;
@@ -91,16 +93,21 @@ public class SearchEngineLocal extends SearchEngineCSW {
     String cswResponse = "";
     CswRecord record = null;
     CswRecords records = null;
-    
+    LOGGER.log(Level.FINE, "Suma :\n{0}", "inside getMetadata");
+ 
     // send the GetRecordsById request
     try {
       GetRecordsGenerator generator = new GetRecordsGenerator();
       String cswRequest = generator.generateCswByIdRequest(uuid);
-      
+      LOGGER.log(Level.FINE, "cswRequest:\n{0}", cswRequest);
+
       IRequestHandler handler = ProviderFactoryHelper.newInstance(this.getRequestContext()).newHandler(this.getRequestContext());
       OperationResponse resp = handler.handleXML(cswRequest);
+      LOGGER.log(Level.FINE, "resp:\n{0}", resp);
+
       cswResponse = resp.getResponseXml();
-      
+      LOGGER.log(Level.FINE, "cswResponse:\n{0}", cswResponse);
+
       records = this.parseResponse(cswResponse);
     } catch (DiscoveryException e) {
       throw new SearchException("Error quering GetRecordById: "+e.getMessage(),e);
@@ -120,9 +127,47 @@ public class SearchEngineLocal extends SearchEngineCSW {
     }
     
     // parse the GetRecordsById response
+    RequestContext rc = null;
     if (record != null) { 
       record.setId(uuid);
       try {
+          String user = "";
+          String pwd = "";
+          Credentials creden = null;
+          if (rc != null) {
+              if (!rc.getApplicationContext().getConfiguration().getIdentityConfiguration().getSingleSignOnMechanism().getActive()) {
+                  creden = rc.getUser().getCredentials();
+                  if ((creden != null) && creden.hasUsernamePasswordCredentials()) {
+                      LOGGER.log(Level.FINE,"hasUsernamePasswordCredentials from sso");
+                      UsernamePasswordCredentials creds = creden.getUsernamePasswordCredentials();
+                      if (creds != null) {
+                          user = creds.getUsername();
+                          pwd = creds.getPassword();
+                      } else {
+                          LOGGER.log(Level.SEVERE, "null UsernamePasswordCredentials from sso);");
+                      }
+                  } else {
+                      user = rc.getUser().getName();
+                  }
+              } else {
+                  creden = rc.getApplicationContext().getConfiguration().getIdentityConfiguration().getLdapConfiguration().getConnectionProperties().getServiceAccountCredentials();
+                  if ((creden != null) && creden.hasUsernamePasswordCredentials()) {
+                      LOGGER.log(Level.FINE,"hasUsernamePasswordCredentials from ldap");
+                      UsernamePasswordCredentials creds = creden.getUsernamePasswordCredentials();
+                      if (creds != null) {
+                          user = creds.getUsername();
+                          pwd = creds.getPassword();
+                      } else {
+                          LOGGER.log(Level.SEVERE, "null UsernamePasswordCredentials from ldap);");
+                      }
+                  }
+              }
+          }
+          
+          //LOGGER.log(Level.FINE,"b 4 going into getCswProfile, user: "+user+"   pwd: "+pwd);
+          //Modified by Baohong
+          //getCswProfile().readCSWGetMetadataByIDResponse(cswResponse, record, user, pwd);
+
         getCswProfile().readCSWGetMetadataByIDResponseLocal(cswResponse, record);
       } catch (Exception e) {
         throw new SearchException("Error parsing GetRecordById: "+e.getMessage(),e);
@@ -244,8 +289,9 @@ public class SearchEngineLocal extends SearchEngineCSW {
   protected CswRecords sendRequest(String cswRequest) throws SearchException {
     try {
       LOGGER.log(Level.FINER, "Executing local CSW 2.0.2 Discovery request:\n{0}", cswRequest);
-      
-      
+    
+      LOGGER.log(Level.FINER, "suma :\n{0}", "in side sendRequest: " + cswRequest);
+       
       boolean isSitemapRequest = false;
       Object obj = this.getRequestContext().getObjectMap().get("com.esri.gpt.catalog.search.isSitemapRequest");
       if ((obj != null) && (obj instanceof String)) {

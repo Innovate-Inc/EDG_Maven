@@ -28,9 +28,9 @@
 </style>
 
 <script type="text/javascript" src="<%=com.esri.gpt.framework.context.RequestContext.extract(request).getApplicationConfiguration().getInteractiveMap().getJsapiUrl()%>"></script>
-<script type="text/javascript" src="<%=request.getContextPath()%>/catalog/js/prod/gpt.js""></script>
-<script type="text/javascript" src="<%=request.getContextPath()%>/catalog/js/prod/gemet.js"></script>
-<script type="text/javascript" src="<%=request.getContextPath()%>/catalog/js/prod/gxe.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/catalog/js/v1.2/gpt.js""></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/catalog/js/v1.1/gemet.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/catalog/js/v1.2/gxe.js"></script>
 
 <% // interactive map configuration %>
 <% com.esri.gpt.framework.ArcGIS.InteractiveMap imConfig = 

@@ -15,7 +15,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<gptConfig version="1.2.6">
+<gptConfig version="1.2.7">
 
     <databaseReference name="gpt" jndiName="jdbc/gpt"/>
     
@@ -54,13 +54,14 @@
         - locatorSingleFieldParameter: field for the GeocodeServer service upon which locations can be searched 
     -->
     
-    <interactiveMap
-        jsapiUrl="https://js.arcgis.com/3.13/init.js"
-        mapServiceUrl="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer"
+      <interactiveMap
+        jsapiUrl="//js.arcgis.com/3.13/"
+        mapServiceUrl="//services.arcgisonline.com/arcgis/rest/services/ESRI_StreetMap_World_2D/MapServer"
         mapServiceType="dynamic" 
-        geometryServiceUrl="https://tasks.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer"
-        locatorUrl="https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer"
-        locatorSingleFieldParameter = "singleLine"/>
+        geometryServiceUrl="//tasks.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer"
+        locatorUrl="//geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer"
+        locatorSingleFieldParameter = "Address"/>
+
   
     <catalog gptTablePrefix="GPT_">       
     <!-- Lucene configuration.
@@ -74,7 +75,7 @@
     -->
       
     <lucene
-        indexLocation="C:\lucene"
+        indexLocation="C:/lucene"
         writeLockTimeout="60000"
         useNativeFSLockFactory="true"
         analyzerClassName="org.apache.lucene.analysis.standard.StandardAnalyzer">
@@ -84,7 +85,7 @@
         </adaptor>
     -->
 	    <adaptor name="like" className="com.esri.gpt.catalog.lucene.StandardNetworkParserAdaptor">
-			<attribute key="baseUrl" value="https://edg-staging.epa.gov/OntologyService/query?threshold=0.25&amp;term="/>
+			<attribute key="baseUrl" value="http://localhost:8080/OntologyService/query?threshold=0.25&amp;term="/>
         </adaptor>
     </lucene> 
  
@@ -123,7 +124,7 @@
         - assertion.comment.maxLength: maximum characters allowed for one comment.  
     -->
     <parameter key="assertion.index.enabled" value="true"/>
-    <parameter key="assertion.index.location" value="C:\lucene\assertion"/>
+    <parameter key="assertion.index.location" value="C:/lucene/assertion"/>
     <parameter key="assertion.index.allowNonLocalResourceIds" value="false"/>
     <parameter key="assertion.rating.enabled" value="true"/>
     <parameter key="assertion.comment.enabled" value="true"/>
@@ -170,14 +171,16 @@
 		- allowExternalSiteSearch: Flag enabling federated search
     -->   
         
-    <search
+        <search
         searchTimeoutMillisecs="10000"
         distributedSearchTimeoutMillisecs="5000"
         distributedSearchMaxSelectedSites="5"
-        searchResultsPerPage="25"
+        searchResultsPerPage="10"
         searchResultsReviewsShown="only-reviewed"
         maxSavedSearches="10"
-        allowExternalSiteSearch="true">
+        allowExternalSiteSearch="true"
+        allowTemporalSearch="true">
+
         <!-- Settings for repositories available in federated search
             - key: regular expression, can be used to identify the rid for the repository.
             - class: search engine instance, a Java class that will process the search request.
@@ -346,6 +349,16 @@
         <parameter key="webharvester.policy.class" value="com.esri.gpt.control.webharvest.engine.SimpleHarvestPolicy"/>
         <parameter key="webharvester.policy.simple.frequency" value="1"/>
         <parameter key="webharvester.agp2agp.maxItems" value="2000"/>
+        
+                <!-- Robot parameters.
+            - bot.robotstxt.enabled: use of robots.txt during harvesting is enabled. Default: true
+            - bot.robotstxt.override:  allows user to override bot.robotstxt.enabled. Default: true;
+            - bot.agent: name of the user agent for interpreting content of robots.txt. Default: "GeoportalServer"
+        -->
+        <parameter key="bot.robotstxt.enabled" value=""/>
+        <parameter key="bot.robotstxt.override" value=""/>
+        <parameter key="bot.agent" value=""/>
+        
 
         <!-- Additional Parameters.
             - catalog.enableEditForAllPubMethods:
@@ -393,7 +406,7 @@
         <parameter key="publicationRequest.autoApprove" value="false"/>
         <parameter key="spatialRelevance.ranking.maxDoc" value="1000000"/>
         <parameter key="rssProviderUrl" value=""/>
-        <parameter key="reverseProxy.baseContextPath" value="https://edg-staging.epa.gov/metadata"/>
+        <parameter key="reverseProxy.baseContextPath" value="http://localhost:8080/metadata"/>
         <parameter key="RestServlet.printXml.stripStyleSheets" value="true"/>
         <parameter key="Administration.viewMetadata.stripStyleSheets" value="true"/>
         <parameter key="httpClientRequest.connectionTimeout" value="2[MINUTE]"/>
@@ -444,6 +457,12 @@
         <parameter key="catalog.cart.processor.whitelist" value="com.esri.gpt.control.cart.ZipXmls"/>
         <parameter key="catalog.cart.xslt.whitelist" value=""/>
         <parameter key="catalog.cart.tryhandler.class" value=""/>
+                <!-- example of custom 'tryhandler'
+        <parameter key="catalog.cart.tryhandler.class" value="com.esri.gpt.control.cart.VolumeTryHandler"/>
+        <parameter key="catalog.cart.volumetryhandler.commaSeparatedFields" value="dcat.size"/>
+        <parameter key="catalog.cart.volumetryhandler.max" value="100000"/>
+        -->
+        
 
         <!-- Mapping file to map dcat fields to lucene index fields -->
         <parameter key="dcat.mappings" value="gpt/metadata/dcat-mappings.xml"/>
@@ -455,6 +474,11 @@
 	<parameter key="catalog.useCollections" value="false"/>
 	<parameter key="lucene.maxrecords.threshold" value="10000"/>
     </catalog>
+        <!-- customization of web harvester -->
+    <!--webharvester>
+		<dataProcessorFactory enabled="true" className="com.esri.gpt.control.webharvest.extensions.localfolder.LocalFolderDataProcessorFactory" name="localfolder" rootFolder="c:\data"/>
+    </webharvester-->
+    
     
     <!-- Download data configuration.
         - taskUrl: geoprocessing task URL
@@ -524,6 +548,25 @@
             </roles>
         </simpleAdapter>
 	
+					<!-- 
+					Identity adapter when using ArcGIS Online or Portal as the identity store.
+					appId: application id (Geoportal app registered at ArcGIS Online or Portal)
+					authorizeUrl: OAuth2 authorize url (e.g. https://myorg.maps.arcgis.com/sharing/oauth2/authorize)
+					expirationMinutes: token expiration minutes 
+					gptAdministratorsGroupId: group id for Geoportal administrators (optional)
+					gptPublishersGroupId: group id for Geoportal publishers (optional)
+					allUsersCanPublish: true or false, if true all authenticated users can publish items to Geoportal
+				-->
+				<!-- 
+        <arcgisPortalAdapter
+        	appId=""
+        	authorizeUrl=""
+        	expirationMinutes="120"
+        	gptAdministratorsGroupId=""
+        	gptPublishersGroupId=""
+          allUsersCanPublish="true"
+        />
+        -->
 	
          
 	 
@@ -588,6 +631,7 @@
                   <attribute key="email"        ldapName="mail"/>
                   <attribute key="firstName"    ldapName="givenName"/>
                   <attribute key="lastName"     ldapName="sn"/>
+                  <attribute key="displayName"  ldapName="displayName"/>
                   <attribute key="organization" ldapName="o"/>
                   <attribute key="affiliation"  ldapName="businessCategory"/>
                   <attribute key="street"       ldapName="street"/>

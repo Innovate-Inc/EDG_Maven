@@ -115,17 +115,9 @@
          
     String responseData = "";
     HttpClientRequest client = new HttpClientRequest();
-
-    //JSS 20110429: Add xsl param to force use of metadata stylesheet.
-    restUrl += "&xsl=metadata_to_html_full";
-
     client.setUrl(restUrl);
     String hdrVal = Val.chkStr(request.getHeader("accept-language"));
     if (hdrVal.length() > 0) client.setRequestHeader("accept-language",hdrVal);
-
-    //JSS 20110429: Pass down cookies so that logged in user is recognized.
-    String theCookies = request.getHeader("Cookie");
-    client.setRequestHeader("Cookie", theCookies);
     
     try {
       responseData = client.readResponseAsCharacters();
