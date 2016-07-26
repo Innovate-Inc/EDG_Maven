@@ -16,17 +16,7 @@
 <% // createMetadataBody.jsp - Create metadata page (JSF body) %>
 <%@ taglib prefix="f" uri="http://java.sun.com/jsf/core" %>
 <%@ taglib prefix="h" uri="http://java.sun.com/jsf/html" %>
-
 <h:form id="frmCreateMetadata" styleClass="fixedWidth">
-<script type="text/javascript">
-
-    function goToCreateDataGov() {
-        document.getElementsByName("frmCreateMetadata:schema")[0].checked = "checked";
-    }
-    dojo.addOnLoad(goToCreateDataGov);
-
-</script>
-
 <h:inputHidden value="#{EditMetadataController.prepareView}"/>
 
 <% // prompt %>
@@ -44,15 +34,14 @@
     value="#{EditMetadataController.selectablePublishers.selectedKey}">
     <f:selectItems value="#{EditMetadataController.selectablePublishers.items}"/>
   </h:selectOneMenu>
-
+  
   <% // schema %>
-  <h:outputLabel for="schema" styleClass="requiredField"
+  <h:outputText styleClass="requiredField"
     value="#{gptMsg['catalog.publication.createMetadata.label.schema']}"/>
   <h:selectOneRadio id="schema" layout="pageDirection"
     value="#{EditMetadataController.createSchemaKey}">
     <f:selectItems value="#{EditMetadataController.createSchemaItems}"/>
   </h:selectOneRadio>
-
 
   <% // submit button %>
   <h:outputText value=""/>

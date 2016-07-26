@@ -181,7 +181,7 @@ public class InnoRestServlet extends HttpServlet {
                 } else {
                     if (fParm == null || fParm.equals("")) {
                         xslParm = getCorrectSS(xslParm, request, xmlIn);
-                        xslUrl = "/src/main/resources/gpt/metadata/" + xslParm + ".xsl";
+                        xslUrl = "/WEB-INF/classes/gpt/metadata/" + xslParm + ".xsl";
                         //log.info("xmlIn:"+xmlIn);
                         //log.info("xslUrl:"+xslUrl);
                         htmlOut = xform(xmlIn, xslUrl);
