@@ -40,6 +40,12 @@
         action="catalog.main.home"
         value="#{gptMsg['catalog.main.home.menuCaption']}"
         styleClass="#{PageContext.tabStyleMap['catalog.main.home']}"/>
+    <h:commandLink
+        id="contentAbout"
+        action="catalog.content.about"
+        value="#{gptMsg['catalog.content.about.menuCaption']}"
+      	styleClass="#{PageContext.tabStyleMap['catalog.content.about']}"
+        title="About the EDG" />
 
 	<%
 	com.esri.gpt.framework.context.RequestContext rcx = com.esri.gpt.framework.context.RequestContext.extract(request);
@@ -80,6 +86,26 @@
 	<%
 	}
 	%>
+	<h:commandLink
+        id="data"
+        action="catalog.data.home"
+        value="#{gptMsg['catalog.data.home.menuCaption']}"
+      	styleClass="#{PageContext.tabStyleMap['catalog.data']}"
+        title="Data"/>
+ 
+   <h:commandLink
+        id="components"
+        action="catalog.components.home"
+        value="#{gptMsg['catalog.components.home.menuBar.menuCaption']}"
+      	styleClass="#{PageContext.tabStyleMap['catalog.components']}"
+        title="Reuse Components of the EDG"/>
+ 
+  <h:commandLink
+        id="resources"
+        action="catalog.resources.home"
+        value="#{gptMsg['catalog.resources.home.menuCaption']}"
+      	styleClass="#{PageContext.tabStyleMap['catalog.resources']}"
+        title="Resources"/>
 	
   <h:commandLink 
         id="publicationManageMetadata"
