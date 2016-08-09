@@ -43,7 +43,7 @@
 </gpt:jscriptVariable>
 
 <f:verbatim>
-
+<!--script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/dojo/1.9.3/dojo/dojo.js'></script-->
 <script type="text/javascript">
 
 
@@ -323,6 +323,111 @@ function rsInsertReviewsHandler(data) {
    
 }
 
+function innoFixRestIntraLinks() {
+	//alert("in innoFixRestIntraLinks");
+    //console.debug("in innoFixRestIntraLinks");
+    innoFixRestIntraLink("srRestGEORSSIntra");
+    innoFixRestIntraLink("srRestATOMIntra");
+    innoFixRestIntraLink("srRestHTMLIntra");
+    innoFixRestIntraLink("srRestFRAGMENTIntra");
+    innoFixRestIntraLink("srRestKMLIntra");
+    innoFixRestIntraLink("srRestJSONIntra");
+    innoFixRestIntraLink("srRestDCATIntra");
+    innoFixRestIntraLink("srRestCSVIntra");
+    //alert("frmSearchCriteria:srRestGEORSSIntra:" + dojo.byId("frmSearchCriteria:srRestGEORSSIntra").value);
+    //INNfixRestLinks();
+}
+dojo.addOnLoad(innoFixRestIntraLinks);
+function innoFixRestIntraLink(id) {
+    var a = dojo.byId("frmSearchCriteria:"+id);
+    //var a = dojo.byId(id);
+    if (a != null) {
+        //console.debug("a "+a);
+        var href = a.href;
+        //console.debug("href: "+href);
+        var newHref = href.replace(innoRestFrom,innoRestTo);
+        //alert("newHref: "+newHref);
+        //console.debug("newHref: "+newHref);
+        a.href = newHref;
+    }
+}
+// List of all csv anchor nodes, used to set style of make if visible
+//  if it supports csv output
+var innoCsvAnchors;
+// Comma separated string of all possible csv uuids
+var innoAllCsvUuids = "";
+/**
+ *Remove any csvLink elements from the dom left over from a previous page load.
+ *This is called when the searh button is clicked.
+ */
+function innoRemoveCsvLinks() {
+  //console.debug("in innoRemoveCsvLinks");
+  innoAllCsvUuids = "";
+  dojo.query(".csvLink").forEach(function(node,index){
+      //console.debug("removing index "+index);
+      node.parentNode.removeChild(node);
+  });
+}
+/**
+Fill innoUuidToCsvAnchor, and send request to get uuids in dataGov schema
+**/
+function innoGetCsvAnchors() {
+  //console.debug("in innoGetCsvAnchors");
+  innoCsvAnchors = new Array();
+  dojo.query(".csvLink").forEach(function(node,index){
+      // get uuid from anchor href
+      var href = decodeURI(dojo.attr(node,"href"));
+      var idPos = href.indexOf("uuids=");
+      if (idPos >= 0) {
+        var uuid = href.substring(idPos+6);
+        //console.debug("uuid"+uuid);
+        if (uuid.length > 0) {
+            innoCsvAnchors[index] = node;
+            if (innoAllCsvUuids.length>0)
+                innoAllCsvUuids += ",";
+            innoAllCsvUuids += uuid;
+        }
+      }
+  });
+  //console.debug("innoAllCsvUuids: "+innoAllCsvUuids);
+  // send uuids to web service to find out which ones are dataGov
+  var url = contextPath + "/UuidsInSchema?schemaKey=dataGov&uuids="+innoAllCsvUuids;
+  //console.debug("url: "+url);
+  dojo.xhrGet({
+    url: url,
+    preventCache: true,
+    handleAs: "text",
+    load: innoMakeCsvVisible,
+    error: function(err) {
+       //console.debug("error: "+err);
+    }
+  });
+}
+dojo.addOnLoad(innoGetCsvAnchors);
+function innoMakeCsvVisible(response) {
+    //console.debug("innoMakeCsvVisible with response: "+response);
+    var realCsvUuids = response.split(",");
+    var allUuids = innoAllCsvUuids.split(",");
+    //console.debug("realCsvUuids.length "+realCsvUuids.length+"   allUuids "+allUuids.length);
+    if (realCsvUuids.length>=1) {
+        if (realCsvUuids[0].indexOf("OK:")>=0) {
+            if (realCsvUuids.length>1) {
+                // look for each real uuid in all, and if found, set style to make visible
+                //console.debug("realCsvUuids.length: "+realCsvUuids.length+"   allUuids.length: "+allUuids.length);
+                //for (var j=0; j<allUuids.length;j=j+1) {console.debug("j: "+j+"   allUuids[j]: "+allUuids[j])}
+                for (var real=1; real<realCsvUuids.length; real++) {
+                    for (var all=0; all<allUuids.length; all++) {
+                        //console.debug("all: "+allUuids[all]+"   real: "+realCsvUuids[real]);
+                        if (allUuids[all]==realCsvUuids[real]) {
+                            //console.debug("found: real: "+real+"   "+allUuids[all]+"  href: "+dojo.attr(innoCsvAnchors[all],"href"));
+                            dojo.style(innoCsvAnchors[all],"display","block");
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 /*
 Goes through the resource urls and types and forwards the information to
 the service checker url via an xml to json jsp
@@ -429,8 +534,22 @@ function rsGetQualityOfService() {
 }
 
 </script>
+<script type="text/javascript" src="../../catalog/js/inno/metrics.js"></script>
+<script type="text/javascript">
+    dojo.addOnLoad(innoHookupAnchors);
+</script>
 
 </f:verbatim>
+<gpt:jscriptVariable
+  id="innoRestFrom"
+  quoted="true"
+  value="#{gptMsg['catalog.search.searchResult.restFrom']}"
+  variableName="innoRestFrom"/>
+<gpt:jscriptVariable
+  id="innoRestTo"
+  quoted="true"
+  value="#{gptMsg['catalog.search.searchResult.restTo']}"
+  variableName="innoRestTo"/>
 
 <gpt:jscriptVariable 
   id="_rsReviewAlt"
@@ -542,30 +661,30 @@ function rsGetQualityOfService() {
         rendered="#{not empty PageContext.applicationConfiguration.catalogConfiguration.parameters['catalog.cart.enabled'] and PageContext.applicationConfiguration.catalogConfiguration.parameters['catalog.cart.enabled'].value == 'true'}"
         value="#{gptMsg['catalog.search.searchResult.lblToggle']}"
         style="vertical-align: top; #{SearchController.expandResultCheckboxStyle}"/>
-      <h:selectBooleanCheckbox id="srExpandResults"
-        value="#{SearchController.searchCriteria.expandResultContent}"
-        style="#{SearchController.expandResultCheckboxStyle}"
-        onclick="rsExpandAllRecords(this);"/>
-      <h:outputLabel for="srExpandResults" 
-        value="#{gptMsg['catalog.search.searchResult.lblExpand']}"
+	<h:selectBooleanCheckbox id="srExpandResults"
+	  value="#{SearchController.searchCriteria.expandResultContent}"
+	  style="#{SearchController.expandResultCheckboxStyle}"
+	  onclick="rsExpandAllRecords(this);"/>
+	<h:outputLabel for="srExpandResults" 
+	  value="#{gptMsg['catalog.search.searchResult.lblExpand']}"
         style="vertical-align: top; #{SearchController.expandResultCheckboxStyle}"/>
     </span>
     <span style="float: right; margin-right: 4px;">
       <h:outputLink id="srLnkZoomToThese2" value="javascript:void(0)" 
         rendered="#{empty PageContext.applicationConfiguration.catalogConfiguration.parameters['catalog.cart.enabled'] or not PageContext.applicationConfiguration.catalogConfiguration.parameters['catalog.cart.enabled'].value == 'true'}"
-        onclick="javascript:return srZoomToThese();"
-        style="#{SearchController.expandResultCheckboxStyle}">
+	  onclick="javascript:return srZoomToThese();"
+	  style="#{SearchController.expandResultCheckboxStyle}">
         <h:outputText id="srTxtZoomToThese2" value="#{gptMsg['catalog.search.searchResult.zoomToThese']}" />
-      </h:outputLink>
+	</h:outputLink>
       <h:outputText escape="false" value="&nbsp;&nbsp;&nbsp;" 
          rendered="#{empty PageContext.applicationConfiguration.catalogConfiguration.parameters['catalog.cart.enabled'] or not PageContext.applicationConfiguration.catalogConfiguration.parameters['catalog.cart.enabled'].value == 'true'}"
                     />
       <h:outputLink id="srLnkZoomToAOI2" value="javascript:void(0)" 
         rendered="#{empty PageContext.applicationConfiguration.catalogConfiguration.parameters['catalog.cart.enabled'] or not PageContext.applicationConfiguration.catalogConfiguration.parameters['catalog.cart.enabled'].value == 'true'}"
-        onclick="javascript:return srZoomToAOI();"
-        style="#{SearchController.expandResultCheckboxStyle}">
+    onclick="javascript:return srZoomToAOI();"
+    style="#{SearchController.expandResultCheckboxStyle}">
         <h:outputText id="srTxtZoomToAOI2" value="#{gptMsg['catalog.search.searchResult.zoomToAOI']}" />
-      </h:outputLink>
+  </h:outputLink>
     </span>
   </div>
 </h:panelGroup>
@@ -606,13 +725,11 @@ function rsGetQualityOfService() {
 				
 					<% // Abstract and thumbnail %>
 					<h:panelGroup>
-                      <h:outputLink title="" target="_blank" value="#{record.thumbnailLink.url}" styleClass="reviewResult">
-                        <h:graphicImage id="_imgRecordThumbnail" 
-                          alt="#{gptMsg['catalog.rest.thumbNail']}"
-                          rendered="#{not empty record.thumbnailUrl}"
-                          value="#{record.thumbnailUrl}" width="64" height="64" styleClass="resultsThumbnail" />
-                      </h:outputLink>
-                      <h:outputText id="_txtAbstract" styleClass="resultsContent" value="#{record['abstract']}" />
+					  <h:graphicImage id="_imgRecordThumbnail" 
+					    alt="#{gptMsg['catalog.rest.thumbNail']}"
+					    rendered="#{not empty record.thumbnailLink.url}"
+               value="#{record.thumbnailLink.url}" width="64" height="64" styleClass="resultsThumbnail" />
+            <h:outputText id="_txtAbstract" styleClass="resultsContent" value="#{record['abstract']}" />
 				  </h:panelGroup>
 				  
 				  <% // resource info %>
@@ -673,7 +790,7 @@ function rsGetQualityOfService() {
 
 <% // rest bindings for this result %>
 <h:panelGroup rendered="#{SearchController.searchResult.recordSize > 0 && SearchController.restSearchRequestUrlGeorss != null}">
-  <h:outputText value="#{gptMsg['catalog.search.searchResult.restLabel']}"/>
+  <h:outputText value="#{gptMsg['catalog.search.searchResult.restLabel']}"/><br/>
   <h:outputLink id="srRestGEORSS" target="_blank" value="#{SearchController.restSearchRequestUrlGeorss}" styleClass="resultsLinkRestApi">
     <h:outputText value="GEORSS"/>
   </h:outputLink>
@@ -696,6 +813,33 @@ function rsGetQualityOfService() {
     <h:outputText value="DCAT"/>
   </h:outputLink>
   <h:outputLink id="srRestCSV" target="_blank" value="javascript:void(0);" onclick="javascript:getCsv('#{SearchController.restSearchRequestUrlJson}'); return false;" styleClass="resultsLinkRestApi">
+    <h:outputText value="CSV"/>
+  </h:outputLink>
+  </h:panelGroup><br/>
+<h:panelGroup rendered="#{SearchController.searchResult.recordSize > 0 && SearchController.restSearchRequestUrlGeorss != null}">
+  <h:outputText value="#{gptMsg['catalog.search.searchResult.restLabelIntranet']}"/><br/>
+  <h:outputLink id="srRestGEORSSIntra" target="_blank" value="#{SearchController.restSearchRequestUrlGeorss}" styleClass="resultsLinkRestApi">
+    <h:outputText value="GEORSS"/>
+  </h:outputLink>
+  <h:outputLink id="srRestATOMIntra" target="_blank" value="#{SearchController.restSearchRequestUrlAtom}" styleClass="resultsLinkRestApi">
+    <h:outputText value="ATOM"/>
+  </h:outputLink>  
+  <h:outputLink id="srRestHTMLIntra" target="_blank" value="#{SearchController.restSearchRequestUrlHtml}" styleClass="resultsLinkRestApi">
+    <h:outputText value="HTML"/>
+  </h:outputLink>
+  <h:outputLink id="srRestFRAGMENTIntra" target="_blank" value="#{SearchController.restSearchRequestUrlHtmlFragment}" styleClass="resultsLinkRestApi">
+    <h:outputText value="FRAGMENT"/>
+  </h:outputLink>
+  <h:outputLink id="srRestKMLIntra" target="_blank" value="#{SearchController.restSearchRequestUrlKml}" styleClass="resultsLinkRestApi">
+    <h:outputText value="KML"/>
+  </h:outputLink>
+  <h:outputLink id="srRestJSONIntra" target="_blank" value="#{SearchController.restSearchRequestUrlJson}" styleClass="resultsLinkRestApi">
+    <h:outputText value="JSON"/>
+  </h:outputLink>
+  <h:outputLink id="srRestDCATIntra" target="_blank" value="#{SearchController.restSearchRequestUrlDcat}" styleClass="resultsLinkRestApi">
+    <h:outputText value="DCAT"/>
+  </h:outputLink>  
+  <h:outputLink id="srRestCSVIntra" target="_blank" value="javascript:void(0);" onclick="javascript:getCsv('#{SearchController.restSearchRequestUrlJson}'); return false;" styleClass="resultsLinkRestApi">
     <h:outputText value="CSV"/>
   </h:outputLink>
 </h:panelGroup>
