@@ -17,7 +17,7 @@
 <%@taglib prefix="h" uri="http://java.sun.com/jsf/html"%>
 
 <%@taglib prefix="tiles" uri="http://struts.apache.org/tags-tiles"  %>
-<h:form id="frmBanner">	
+<%-- <h:form id="frmBanner">	
 	<h:outputLink 
 	  rendered="#{not empty PageContext.applicationConfiguration.catalogConfiguration.searchConfig.mapViewerUrl}"
 		id="openMapViewerMvs" 
@@ -31,7 +31,7 @@
     onclick="#{PageContext.applicationConfiguration.catalogConfiguration.searchConfig.defaultViewerUrl}; return false;">
     <h:outputText value="#{gptMsg['catalog.menu.menuitem.launchMapViewer']}" />
   </h:outputLink>
-</h:form>
+</h:form> --%>
 
 <%--Modified to handle the AllowOnlyAuthenticatedUser parameter. If set to true (default is false), then login is required for all users --%>
 <h:form id="frmPrimaryNavigation">
@@ -114,6 +114,13 @@
         value="#{gptMsg['catalog.publication.manageMetadata.menuCaption']}"
         rendered="#{PageContext.roleMap['gptPublisher']}"
         actionListener="#{ManageMetadataController.processAction}" />
+	<h:commandLink
+        id="collection" 
+        action="catalog.collection.home"
+        value="#{gptMsg['catalog.collection.home.menuCaption']}"
+        styleClass="#{PageContext.tabStyleMap['catalog.collection.home']}"
+        rendered="#{PageContext.roleMap['gptPublisher']}"
+        title="Compilation"/>
 	<h:commandLink
         id="validationManageMetadata" 
         action="catalog.publication.validateMetadata"
