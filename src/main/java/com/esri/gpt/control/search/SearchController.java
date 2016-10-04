@@ -219,6 +219,10 @@ public void setSavedSearchesPanelStyle(String style) {
   this.savedSearchesPanelStyle = Val.chkStr(style);
 }
 
+public String getHomePageAction(){
+	this.searchCriteria.getSearchFilterKeyword().reset();
+	return "catalog.main.home";
+}
 /**
  * Gets the style attribute for the save search control.
  * @return the style
@@ -481,13 +485,11 @@ throws AbortProcessingException, Exception {
     this.setNavigationOutcome(NAV_2SEARCHCRITERIA);
 
   } /*else if(eventType.equals(SearchEvents.Event.EVENT_VIEWMD_DETAILS.name())) {
-
     FacesContextBroker facesBroker = new FacesContextBroker();
     Map requestMap = facesBroker.getExternalContext().getRequestParameterMap();
     String uuid = (String) requestMap.get(SearchEvents.Event.PARAM_UUID);
     LOG.fine("Viewing Summary of "+ uuid);
     doViewMetadataDetails(context,uuid);
-
   }*/else if (eventType.equals(SearchEvents.Event.EVENT_EXECUTE_SEARCH.name())) {
     LOG.fine("Initiating new search");
     

@@ -1,0 +1,79 @@
+<metadata xml:lang="en">
+    <Esri>
+        <CreaDate>20160810</CreaDate>
+        <CreaTime>17324000</CreaTime>
+        <ArcGISFormat>1.0</ArcGISFormat>
+        <ArcGISstyle>North American Profile of ISO19115 2003</ArcGISstyle>
+        <SyncOnce>TRUE</SyncOnce>
+        <scaleRange>
+            <minScale>150000000</minScale>
+            <maxScale>5000</maxScale>
+        </scaleRange>
+        <DataProperties>
+            <itemProps>
+                <imsContentType export="False"/>
+            </itemProps>
+        </DataProperties>
+        <ArcGISProfile>NAP</ArcGISProfile>
+    </Esri>
+    <dataIdInfo>
+        <idAbs>This is the abstract</idAbs>
+        <idCitation xmlns="">
+            <resTitle>This is the title</resTitle>
+            <date>
+                <createDate>2016-08-10T00:00:00</createDate>
+            </date>
+        </idCitation>
+        <searchKeys>
+            <keyword>tag1</keyword>
+            <keyword>tag2</keyword>
+        </searchKeys>
+        <dataLang>
+            <languageCode value="eng"/>
+            <countryCode value="US"/>
+        </dataLang>
+        <dataChar>
+            <CharSetCd value="004"/>
+        </dataChar>
+        <dataExt xmlns="">
+            <exDesc>Extent</exDesc>
+            <geoEle xmlns="">
+                <GeoDesc>
+                    <exTypeCode>0</exTypeCode>
+                    <geoId xmlns="">
+                        <identCode>1</identCode>
+                    </geoId>
+                </GeoDesc>
+            </geoEle>
+        </dataExt>
+        <tpCat>
+            <TopicCatCd value="008"/>
+        </tpCat>
+    </dataIdInfo>
+    <mdHrLv>
+        <ScopeCd value="005"/>
+    </mdHrLv>
+    <mdFileID>D4D120F4-A479-4239-AF29-54441E69591A</mdFileID>
+    <mdLang>
+        <languageCode value="eng"/>
+        <countryCode value="US"/>
+    </mdLang>
+    <mdChar>
+        <CharSetCd value="004"/>
+    </mdChar>
+    <mdDateSt>20160810</mdDateSt>
+    <mdContact xmlns="">
+        <rpIndName>Torrin Hultgren</rpIndName>
+        <rpOrgName>U.S. Environmental Protection Agency, Office of Environmental Information</rpOrgName>
+        <rpPosName>Geospatial Data Owner</rpPosName>
+        <rpCntInfo xmlns="">
+            <cntAddress addressType="both">
+                <delPoint>Address here.</delPoint>
+            </cntAddress>
+        </rpCntInfo>
+        <displayName>Torrin Hultgren</displayName>
+        <role>
+            <RoleCd value="007"/>
+        </role>
+    </mdContact>
+</metadata>

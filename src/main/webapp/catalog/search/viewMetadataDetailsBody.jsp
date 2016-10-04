@@ -24,11 +24,18 @@
   com.esri.gpt.framework.ArcGIS.InteractiveMap imConfig = 
      com.esri.gpt.framework.context.RequestContext.extract(request).getApplicationConfiguration().getInteractiveMap();
   String vmdUuid = Val.chkStr(request.getParameter("uuid"));
-  String sRestUrl = request.getContextPath()+"/rest/document?f=html&id="+java.net.URLEncoder.encode(vmdUuid,"UTF-8");
-  
+  String sRestUrl = request.getContextPath()+"/rest/document?&xsl=metadata_to_html_full&f=html&id="+java.net.URLEncoder.encode(vmdUuid,"UTF-8");
+  if ((request.getParameter("redirected"))!= null){  
+       if ((request.getParameter("redirected")).equals("true")) {
+        sRestUrl = request.getContextPath()+"/rest/document?&xsl=metadata_to_html_full&redirected=true&f=html&id="+java.net.URLEncoder.encode(vmdUuid,"UTF-8");
+       }  
+}
 %>
 
 <script type="text/javascript">
+//Hide Share your Feedback Link
+document.getElementById('frmTertiaryNavigation:openShareFeedback').style.display="none";
+
   var gptMapConfig = new GptMapConfig();
   gptMapConfig.mapServiceURL = "<%=imConfig.getMapServiceUrl()%>";
   gptMapConfig.mapServiceType = "<%=imConfig.getMapServiceType()%>";
@@ -46,6 +53,7 @@
 function MddMap() {
   var _gptMap = null;
   var _gptInpEnv = null;
+  var _gptInpEnvBeforePrj = null;
   
   this.initialize = function initialize() {
     var config = gptMapConfig;
@@ -71,6 +79,20 @@ function MddMap() {
       
     _gptMap = new GptMap();
     dojo.connect(_gptMap,"onMapLoaded",this,"onMapLoaded");
+    
+//    try
+//    {
+//        _gptInpEnvBeforePrj = new GptInputEnvelope();
+//        _gptInpEnv = esri.geometry.geographicToWebMercator(_gptInpEnvBeforePrj);
+//
+//    }
+//    catch(err)
+//    {
+//        txt="There was an error on this page.\n\n";
+//        txt+="Error description: " + err.message + "\n\n";
+//        txt+="Click OK to continue.\n\n";
+//        alert(txt);
+//    }  
 
     _gptInpEnv = new GptInputEnvelope();
     _gptInpEnv.initialize(config,_gptMap);

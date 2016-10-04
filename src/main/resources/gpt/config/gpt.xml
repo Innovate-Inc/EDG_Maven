@@ -54,8 +54,8 @@
         - locatorSingleFieldParameter: field for the GeocodeServer service upon which locations can be searched 
     -->
     
-      <interactiveMap
-        jsapiUrl="//js.arcgis.com/3.13/"
+     <interactiveMap
+        jsapiUrl="//js.arcgis.com/3.17/"
         mapServiceUrl="//services.arcgisonline.com/arcgis/rest/services/ESRI_StreetMap_World_2D/MapServer"
         mapServiceType="dynamic" 
         geometryServiceUrl="//tasks.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer"
@@ -75,7 +75,7 @@
     -->
       
     <lucene
-        indexLocation="C:/lucene"
+        indexLocation="C:\lucene"
         writeLockTimeout="60000"
         useNativeFSLockFactory="true"
         analyzerClassName="org.apache.lucene.analysis.standard.StandardAnalyzer">
@@ -103,7 +103,7 @@
         - lucene.remoteWriterUrl:
 			the URL to be used when indexing documents remotely
     -->      
-    <parameter key="lucene.alwaysStoreXmlInIndex" value="false"/>
+    <parameter key="lucene.alwaysStoreXmlInIndex" value="true"/>
     <parameter key="lucene.force.isPartOf" value=""/>
     <parameter key="lucene.useSingleSearcher" value="true"/>
     <parameter key="lucene.useSingleWriter" value="true"/>
@@ -171,16 +171,14 @@
 		- allowExternalSiteSearch: Flag enabling federated search
     -->   
         
-        <search
+    <search
         searchTimeoutMillisecs="10000"
         distributedSearchTimeoutMillisecs="5000"
         distributedSearchMaxSelectedSites="5"
-        searchResultsPerPage="10"
+        searchResultsPerPage="25"
         searchResultsReviewsShown="only-reviewed"
         maxSavedSearches="10"
-        allowExternalSiteSearch="true"
-        allowTemporalSearch="true">
-
+        allowExternalSiteSearch="true">
         <!-- Settings for repositories available in federated search
             - key: regular expression, can be used to identify the rid for the repository.
             - class: search engine instance, a Java class that will process the search request.
@@ -350,7 +348,7 @@
         <parameter key="webharvester.policy.simple.frequency" value="1"/>
         <parameter key="webharvester.agp2agp.maxItems" value="2000"/>
         
-                <!-- Robot parameters.
+                 <!-- Robot parameters.
             - bot.robotstxt.enabled: use of robots.txt during harvesting is enabled. Default: true
             - bot.robotstxt.override:  allows user to override bot.robotstxt.enabled. Default: true;
             - bot.agent: name of the user agent for interpreting content of robots.txt. Default: "GeoportalServer"
@@ -401,9 +399,14 @@
 				Default: false.                  
         -->  
         <parameter key="catalog.enableEditForAllPubMethods" value="false"/>
+        <parameter key="catalog.enableEditForAdministrator" value="false"/>
+        <parameter key="catalog.enableDuplicate" value="true"/>
         <parameter key="catalog.admin.allowApplyToAll" value="true"/>
+        <parameter key="catalog.useCollections" value="false"/>
         <parameter key="database.isCaseSensitive" value="true"/>
         <parameter key="publicationRequest.autoApprove" value="false"/>
+        <parameter key="publicationRequest.allowFileIdForUuid" value="false"/>
+
         <parameter key="spatialRelevance.ranking.maxDoc" value="1000000"/>
         <parameter key="rssProviderUrl" value=""/>
         <parameter key="reverseProxy.baseContextPath" value="http://localhost:8080/metadata"/>
@@ -412,6 +415,9 @@
         <parameter key="httpClientRequest.connectionTimeout" value="2[MINUTE]"/>
         <parameter key="httpClientRequest.responseTimeout" value="2[MINUTE]"/>
         <parameter key="httpClient.alwaysClose" value="false"/>
+        <parameter key="AllowDuplicateResourceURL" value="false"/>	  
+        <parameter key="AllowOnlyAuthenticatedUser" value="false"/>	  
+        
   
         
 		    <!-- Resource Link Builder
@@ -457,7 +463,7 @@
         <parameter key="catalog.cart.processor.whitelist" value="com.esri.gpt.control.cart.ZipXmls"/>
         <parameter key="catalog.cart.xslt.whitelist" value=""/>
         <parameter key="catalog.cart.tryhandler.class" value=""/>
-                <!-- example of custom 'tryhandler'
+                        <!-- example of custom 'tryhandler'
         <parameter key="catalog.cart.tryhandler.class" value="com.esri.gpt.control.cart.VolumeTryHandler"/>
         <parameter key="catalog.cart.volumetryhandler.commaSeparatedFields" value="dcat.size"/>
         <parameter key="catalog.cart.volumetryhandler.max" value="100000"/>
@@ -474,7 +480,7 @@
 	<parameter key="catalog.useCollections" value="false"/>
 	<parameter key="lucene.maxrecords.threshold" value="10000"/>
     </catalog>
-        <!-- customization of web harvester -->
+            <!-- customization of web harvester -->
     <!--webharvester>
 		<dataProcessorFactory enabled="true" className="com.esri.gpt.control.webharvest.extensions.localfolder.LocalFolderDataProcessorFactory" name="localfolder" rootFolder="c:\data"/>
     </webharvester-->
@@ -547,8 +553,7 @@
                 <role key="gptAdministrator"/>
             </roles>
         </simpleAdapter>
-	
-					<!-- 
+						<!-- 
 					Identity adapter when using ArcGIS Online or Portal as the identity store.
 					appId: application id (Geoportal app registered at ArcGIS Online or Portal)
 					authorizeUrl: OAuth2 authorize url (e.g. https://myorg.maps.arcgis.com/sharing/oauth2/authorize)
@@ -567,9 +572,7 @@
           allUsersCanPublish="true"
         />
         -->
-	
-         
-	 
+		 
 	 <ldapAdapter>
      
          <ldapConnectionProperties
@@ -648,7 +651,7 @@
               dynamicMemberOfGroupsAttribute="controlid=useOracleAPI"
               dynamicMembersAttribute=""
               memberAttribute="uniquemember"
-              memberSearchPattern="(uniquemember={0})" 
+              memberSearchPattern="(&amp;(objectclass=groupOfUniqueNames)(uniquemember={0}))"
               searchDIT="cn=GIS,cn=Groups,dc=epa,dc=gov">
      
         <metadataManagementGroup
@@ -802,7 +805,7 @@
         <thread class="com.esri.gpt.catalog.context.CatalogSynchronizer" at="08:10"/>
         <!--<thread class="com.esri.gpt.catalog.context.CatalogSynchronizer" period='4[HOUR]' delay="30[SECOND]"/>-->
         <!-- Index optimization --> 
-        <thread class="com.esri.gpt.catalog.lucene.LuceneIndexOptimizer" at="08:30"/>
+        <thread class="com.esri.gpt.catalog.lucene.LuceneIndexOptimizer" at="09:30"/>
     
 <!-- Innovate's batch thread -->
       <thread class="com.innovateteam.gpt.BatchUpdateWrapper"

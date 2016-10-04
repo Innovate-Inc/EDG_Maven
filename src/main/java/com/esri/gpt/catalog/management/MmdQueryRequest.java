@@ -11,14 +11,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-package com.esri.gpt.catalog.management;
+ */ 
+package com.esri.gpt.catalog.management;     
 import com.esri.gpt.catalog.arcims.ImsMetadataAdminDao;
 import com.esri.gpt.catalog.context.CatalogConfiguration;
+import com.esri.gpt.catalog.discovery.DiscoveryException;
 import com.esri.gpt.catalog.harvest.repository.HrRecord.HarvestFrequency;
 import com.esri.gpt.catalog.harvest.repository.HrRecord.RecentJobStatus;
+import com.esri.gpt.catalog.harvest.repository.HrSelectRequest;
 import com.esri.gpt.catalog.management.MmdEnums.PublicationMethod;
-import com.esri.gpt.control.webharvest.protocol.ProtocolParseException;
 import com.esri.gpt.framework.collection.StringAttributeMap;
 import com.esri.gpt.framework.context.RequestContext;
 import com.esri.gpt.framework.jsf.RoleMap;
@@ -34,7 +35,7 @@ import com.esri.gpt.framework.util.DateProxy;
 import com.esri.gpt.framework.util.Val;
 
 import java.io.IOException;
-import java.sql.Connection;
+import java.sql.Connection; 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -43,10 +44,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.naming.NamingException;
 import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.lucene.queryParser.ParseException;
+import com.esri.gpt.control.webharvest.protocol.ProtocolParseException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.xml.sax.SAXException;
 
@@ -55,9 +59,7 @@ import org.xml.sax.SAXException;
  */
 public class MmdQueryRequest extends MmdRequest {
 
-
 // class variables =============================================================
-private static final Logger LOGGER = Logger.getLogger(MmdQueryRequest.class.getCanonicalName());
 
 // instance variables ==========================================================
 private ImsMetadataAdminDao     adminDao;
@@ -66,8 +68,8 @@ private boolean                 enableEditForAllPubMethods = false;
 private boolean                 isGptAdministrator;
 private String                  tblImsUser;
 private HashMap<String, String> hmEditablePublishers = new HashMap<String, String>();
-// Flag to allow metadata to be modified by administrator even if he's not the owner
-private boolean isAdminEnabledtoEdit;
+private static final Logger LOGGER = Logger.getLogger(MmdQueryRequest.class.getCanonicalName());
+
 
 // constructors ================================================================
 /**
@@ -108,13 +110,6 @@ public void execute() throws SQLException, IdentityException, NamingException,
 
   adminDao = new ImsMetadataAdminDao(getRequestContext());
   tblImsUser = getRequestContext().getCatalogConfiguration().getUserTableName();
-
-  /*if "catalog.enableEditForAdministrator" exists and is "true", then isAdminEnabledtoEdit is true, else isAdminEnabledtoEdit is false*/
-  if(getRequestContext().getCatalogConfiguration().getParameters().containsKey("catalog.enableEditForAdministrator"))
-	  isAdminEnabledtoEdit = getRequestContext().getCatalogConfiguration().getParameters().getValue("catalog.enableEditForAdministrator").equals("true");
-  else
-	  isAdminEnabledtoEdit=false;
-  
   Users editablePublishers = Publisher.buildSelectablePublishers(getRequestContext(), false);
   for (User u : editablePublishers.values()) {
     if (u.getName().length() > 0) {
@@ -166,7 +161,8 @@ public void execute() throws SQLException, IdentityException, NamingException,
     sbSql.append("SELECT A.TITLE,A.DOCUUID,A.SITEUUID,A.OWNER");
     sbSql.append(",A.APPROVALSTATUS,A.PUBMETHOD,A.UPDATEDATE,A.ACL");
     sbSql.append(",A.ID,A.HOST_URL,A.FREQUENCY,A.SEND_NOTIFICATION,A.PROTOCOL");
-    sbSql.append(",A.FINDABLE,A.SEARCHABLE,A.SYNCHRONIZABLE");
+    //sbSql.append(",A.FINDABLE,A.SEARCHABLE,A.SYNCHRONIZABLE");
+    sbSql.append(",A.FINDABLE,A.SEARCHABLE,A.SYNCHRONIZABLE,A.SCHEMA_KEY");
     sbCount.append("SELECT COUNT(*)");
 
     // append from clause
@@ -311,11 +307,7 @@ public void execute() throws SQLException, IdentityException, NamingException,
             }
           }
           
-          try {
-            readRecord(rs,record,sUsername);
-          } catch (Exception ex) {
-            LOGGER.log(Level.WARNING, "Error reading record.", ex);
-          }
+          readRecord(rs,record,sUsername);
 
           // break if we hit the max value for the cursor
           if (records.size() >= nRecsPerPage) {
@@ -447,9 +439,8 @@ private String readImsOwnerName(Connection con) throws SQLException {
  * @throws ParserConfigurationException if unable to reach parser configuration
  * @throws IOException if unable to perform IO operation
  * @throws SAXException if unable to parse XML data
- * @throws ProtocolParseException if unable to parse protocol
  */
-private void readRecord(ResultSet rs, MmdRecord record, String ownername) throws SQLException, ParserConfigurationException, IOException, SAXException, ProtocolParseException {
+private void readRecord(ResultSet rs, MmdRecord record, String ownername) throws SQLException, ParserConfigurationException, IOException, SAXException {
   int n = 1;
 
   // set the title and uuid
@@ -494,8 +485,13 @@ private void readRecord(ResultSet rs, MmdRecord record, String ownername) throws
     record.setHarvestFrequency(HarvestFrequency.checkValueOf(frequency));
   record.setSendNotification(Val.chkBool(rs.getString(n++), false));
   String protocol = Val.chkStr(rs.getString(n++));
-  if (protocol.length()>0)
-    record.setProtocol(getApplicationConfiguration().getProtocolFactories().parseProtocol(protocol));
+  if (protocol.length()>0) {
+      try {
+            record.setProtocol(getApplicationConfiguration().getProtocolFactories().parseProtocol(protocol));
+        } catch (ProtocolParseException ex) {
+            LOGGER.log(Level.INFO, "Error setProtocol", ex);
+        }
+  }
 
   // set the editable status
   boolean isEditor = record.getPublicationMethod().equalsIgnoreCase(PublicationMethod.editor.name());
@@ -503,16 +499,9 @@ private void readRecord(ResultSet rs, MmdRecord record, String ownername) throws
 
   boolean isProtocol = record.getProtocol()!=null;
   boolean isOwner = hmEditablePublishers.containsKey(record.getOwnerName().toLowerCase());
-  // If isAdminEnabledtoEdit is true and it's an Administrator than it can edit even if not owner
-  /**
   record.setCanEdit(
     (this.enableEditForAllPubMethods || isEditor || isSEditor || isProtocol) &&
     (isOwner || (isProtocol && isGptAdministrator))
-  );
-  **/
-  record.setCanEdit(
-    (this.enableEditForAllPubMethods || isEditor || isSEditor || isProtocol) &&
-    (isOwner || (isProtocol && isGptAdministrator)  || (isAdminEnabledtoEdit && isGptAdministrator)) 
   );
 
   // TODO remove as this is a temporary fix
@@ -524,6 +513,7 @@ private void readRecord(ResultSet rs, MmdRecord record, String ownername) throws
   record.setFindable(Val.chkBool(rs.getString(n++), false));
   record.setSearchable(Val.chkBool(rs.getString(n++), false));
   record.setSynchronizable(Val.chkBool(rs.getString(n++), false));
+  record.setSchemaKey(rs.getString(n++));  // JSS 20110325
 }
 
 /**

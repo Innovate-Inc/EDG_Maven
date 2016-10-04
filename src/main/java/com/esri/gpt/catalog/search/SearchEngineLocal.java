@@ -12,11 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.esri.gpt.catalog.search;
-import com.esri.gpt.catalog.discovery.DiscoveryException;
+package com.esri.gpt.catalog.search;     
+import com.esri.gpt.catalog.discovery.DiscoveryException;   
 import com.esri.gpt.framework.collection.StringSet;
 import com.esri.gpt.framework.context.RequestContext;
 import com.esri.gpt.framework.jsf.MessageBroker;
+import com.esri.gpt.framework.search.DcList;
 import com.esri.gpt.framework.util.Val;
 import com.esri.gpt.server.csw.client.CswRecord;
 import com.esri.gpt.server.csw.client.CswRecords;
@@ -27,6 +28,7 @@ import com.esri.gpt.server.csw.components.OperationResponse;
 import com.esri.gpt.server.csw.components.ProviderFactoryHelper;
 import com.esri.gpt.server.csw.provider3.local.ProviderFactory;
 import com.esri.gpt.framework.security.credentials.UsernamePasswordCredentials;
+
 import com.esri.gpt.framework.security.credentials.Credentials;
 
 import java.io.StringReader;
@@ -47,41 +49,41 @@ import org.xml.sax.InputSource;
  * CSW based search engine that executes against the local GPT catalog.
  */
 public class SearchEngineLocal extends SearchEngineCSW {
-  
+
   /** class variables ========================================================= */
-  
+
   /** The Logger. */
   private static final Logger LOGGER = Logger.getLogger(SearchEngineLocal.class.getName());
-  
+
   /** The ID that can be associated with the search factory hint. */
   public static final String ID = "local";
-  
+
   /** instance variables ====================================================== */
 //  private RequestContext requestContext;
-  
+
   /** constructors ============================================================ */
-  
+
   private SearchEngineLocal() {
-    
+
   }
-  
+
   public SearchEngineLocal(RequestContext context) {
     super(context);
     //this.requestContext = context;
   }
-  
-  
+
+
   // methods =================================================================.
-  /* 
+  /*
    * Ignoring init
-   * 
+   *
    * @throws SearchException the search exception
    */
   @Override
   public void init() throws SearchException {
     // We do not want to contact the urls
   }
-  
+
   /**
    * Sends a CSW GetRecordByID request to CSW service.
    * @param uuid the document UUID
@@ -89,22 +91,24 @@ public class SearchEngineLocal extends SearchEngineCSW {
    * @throws SearchException the search exception
    */
   @Override
-  protected CswRecord getMetadata(String uuid) throws SearchException {  
+  protected CswRecord getMetadata(String uuid) throws SearchException {
     String cswResponse = "";
     CswRecord record = null;
     CswRecords records = null;
-    LOGGER.log(Level.FINE, "Suma :\n{0}", "inside getMetadata");
- 
+    LOGGER.log(Level.FINE, "Baohong :\n{0}", "inside getMetadata");
+    
     // send the GetRecordsById request
+    RequestContext rc = null;
     try {
       GetRecordsGenerator generator = new GetRecordsGenerator();
+      rc = this.getRequestContext();
+
       String cswRequest = generator.generateCswByIdRequest(uuid);
       LOGGER.log(Level.FINE, "cswRequest:\n{0}", cswRequest);
 
       IRequestHandler handler = ProviderFactoryHelper.newInstance(this.getRequestContext()).newHandler(this.getRequestContext());
       OperationResponse resp = handler.handleXML(cswRequest);
       LOGGER.log(Level.FINE, "resp:\n{0}", resp);
-
       cswResponse = resp.getResponseXml();
       LOGGER.log(Level.FINE, "cswResponse:\n{0}", cswResponse);
 
@@ -122,83 +126,88 @@ public class SearchEngineLocal extends SearchEngineCSW {
         Object obj = iter.next();
         if(obj instanceof CswRecord ) {
           record = (CswRecord)obj;
-        } 
+        }
       }
     }
-    
+
     // parse the GetRecordsById response
-    RequestContext rc = null;
-    if (record != null) { 
+    if (record != null) {
       record.setId(uuid);
       try {
-          String user = "";
-          String pwd = "";
-          Credentials creden = null;
-          if (rc != null) {
-              if (!rc.getApplicationContext().getConfiguration().getIdentityConfiguration().getSingleSignOnMechanism().getActive()) {
-                  creden = rc.getUser().getCredentials();
-                  if ((creden != null) && creden.hasUsernamePasswordCredentials()) {
-                      LOGGER.log(Level.FINE,"hasUsernamePasswordCredentials from sso");
-                      UsernamePasswordCredentials creds = creden.getUsernamePasswordCredentials();
-                      if (creds != null) {
-                          user = creds.getUsername();
-                          pwd = creds.getPassword();
-                      } else {
-                          LOGGER.log(Level.SEVERE, "null UsernamePasswordCredentials from sso);");
-                      }
-                  } else {
-                      user = rc.getUser().getName();
-                  }
-              } else {
-                  creden = rc.getApplicationContext().getConfiguration().getIdentityConfiguration().getLdapConfiguration().getConnectionProperties().getServiceAccountCredentials();
-                  if ((creden != null) && creden.hasUsernamePasswordCredentials()) {
-                      LOGGER.log(Level.FINE,"hasUsernamePasswordCredentials from ldap");
-                      UsernamePasswordCredentials creds = creden.getUsernamePasswordCredentials();
-                      if (creds != null) {
-                          user = creds.getUsername();
-                          pwd = creds.getPassword();
-                      } else {
-                          LOGGER.log(Level.SEVERE, "null UsernamePasswordCredentials from ldap);");
-                      }
-                  }
-              }
-          }
-          
-          //LOGGER.log(Level.FINE,"b 4 going into getCswProfile, user: "+user+"   pwd: "+pwd);
-          //Modified by Baohong
-          //getCswProfile().readCSWGetMetadataByIDResponse(cswResponse, record, user, pwd);
-
-        getCswProfile().readCSWGetMetadataByIDResponseLocal(cswResponse, record);
+        String user = "";
+        String pwd = "";
+        Credentials creden = null;
+        if (rc != null) {
+            if (!rc.getApplicationContext().getConfiguration().getIdentityConfiguration().getSingleSignOnMechanism().getActive()) {
+                creden = rc.getUser().getCredentials();
+                if ((creden != null) && creden.hasUsernamePasswordCredentials()) {
+                    LOGGER.log(Level.FINE,"hasUsernamePasswordCredentials from sso");
+                    UsernamePasswordCredentials creds = creden.getUsernamePasswordCredentials();
+                    if (creds != null) {
+                        user = creds.getUsername();
+                        pwd = creds.getPassword();
+                    } else {
+                        LOGGER.log(Level.SEVERE, "null UsernamePasswordCredentials from sso);");
+                    }
+                } else {
+                    user = rc.getUser().getName();
+                }
+            } else {
+                LOGGER.log(Level.INFO,"bji before getLdapConfiguration");
+                creden = rc.getApplicationContext().getConfiguration().getIdentityConfiguration().getLdapConfiguration().getConnectionProperties().getServiceAccountCredentials();
+                LOGGER.log(Level.INFO,"bji after getLdapConfiguration");
+                if ((creden != null) && creden.hasUsernamePasswordCredentials()) {
+                    LOGGER.log(Level.FINE,"hasUsernamePasswordCredentials from ldap");
+                    LOGGER.log(Level.INFO,"bji hasUsernamePasswordCredentials from ldap");
+                    UsernamePasswordCredentials creds = creden.getUsernamePasswordCredentials();
+                    LOGGER.log(Level.INFO,"bji after UsernamePasswordCredentials");
+                    if (creds != null) {
+                        LOGGER.log(Level.INFO,"bji creds is not null");
+                        user = creds.getUsername();
+                        LOGGER.log(Level.INFO,"bji user: " + user);
+                        pwd = creds.getPassword();
+                        LOGGER.log(Level.INFO,"bji pwd: " + pwd);
+                    } else {
+                        LOGGER.log(Level.SEVERE, "null UsernamePasswordCredentials from ldap);");
+                    }
+                }
+            }
+        }
+        
+        //LOGGER.log(Level.FINE,"b 4 going into getCswProfile, user: "+user+"   pwd: "+pwd);
+        //Modified by Baohong
+        //getCswProfile().readCSWGetMetadataByIDResponse(cswResponse, record, user, pwd);
+        getCswProfile().readCSWGetMetadataByIDResponseLocal(cswResponse, record, user, pwd);
       } catch (Exception e) {
         throw new SearchException("Error parsing GetRecordById: "+e.getMessage(),e);
       }
       if (record != null) {
-        
+
         // read the full metadata XML (acl was already processed by above CSW request)
-        String fullMetadataXml = "";       
+        String fullMetadataXml = "";
         try {
-          
+
           IRequestHandler handler = ProviderFactoryHelper.newInstance(this.getRequestContext()).newHandler(this.getRequestContext());
           OperationContext ctx = handler.getOperationContext();
           IOriginalXmlProvider oxp = ctx.getProviderFactory().makeOriginalXmlProvider(ctx);
           fullMetadataXml = oxp.provideOriginalXml(ctx,uuid);
-          
+
         } catch (Exception e) {
           throw new SearchException("Error accessing full metadata xml for: "+uuid);
         }
         record.setFullMetadata(fullMetadataXml);
         if (fullMetadataXml.length() == 0) {
           record = null;
-        } 
+        }
       }
     }
-    
+
     if (record == null) {
       throw new SearchException("No associated record was located for: "+uuid);
     }
     return record;
   }
-  
+
   /**
    * Specific parse for sitemap only response.
    * @param cswResponse the CSW response
@@ -208,19 +217,19 @@ public class SearchEngineLocal extends SearchEngineCSW {
   private CswRecords parseResponseForSitemap(String cswResponse) throws SearchException {
     CswRecords cswRecords = new CswRecords();
     try {
-      //System.err.println(cswResponse);
       
+      //System.err.println(cswResponse);
       InputSource src = new InputSource(new StringReader(Val.chkStr(cswResponse)));
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       factory.setNamespaceAware(true);
       DocumentBuilder builder = factory.newDocumentBuilder();
       org.w3c.dom.Document dom = builder.parse(src);
-      
+
       String cswNamespace = "http://www.opengis.net/cat/csw/2.0.2";
       String dcNamespace = "http://purl.org/dc/elements/1.1/";
       String dctNamespace = "http://purl.org/dc/terms/";
       String idScheme = "urn:x-esri:specification:ServiceType:ArcIMS:Metadata:DocID";
-      
+
       NodeList resultNodes = dom.getElementsByTagNameNS(cswNamespace,"SearchResults");
       if (resultNodes.getLength() == 1) {
         Node searchResultsNode = resultNodes.item(0);
@@ -232,8 +241,8 @@ public class SearchEngineLocal extends SearchEngineCSW {
             cswRecords.setMaximumQueryHits(nHits);
           }
         }
-      }      
-      
+      }
+
       NodeList recordNodes = dom.getElementsByTagNameNS(cswNamespace,"Record");
       int nLen = recordNodes.getLength();
       for (int i=0; i<nLen; i++) {
@@ -247,7 +256,7 @@ public class SearchEngineLocal extends SearchEngineCSW {
           Node ndChild = nlChildren.item(nChild);
           String namespace = ndChild.getNamespaceURI();
           String localname = ndChild.getLocalName();
-          
+
           if ((namespace != null) && (localname != null)) {
             if (namespace.equals(dcNamespace) && localname.equals("identifier")) {
               String scheme = "";
@@ -262,7 +271,7 @@ public class SearchEngineLocal extends SearchEngineCSW {
               modified = Val.chkStr(ndChild.getTextContent());
             }
           }
-          
+
         }
         record.setId(id);
         //System.err.println("id="+id+" modified="+modified);
@@ -271,14 +280,14 @@ public class SearchEngineLocal extends SearchEngineCSW {
         }
         cswRecords.add(record);
       }
-      
+
     } catch (Exception e) {
       throw new SearchException(e);
-    } 
+    }
     return cswRecords;
   }
 
-    
+
   /**
    * Sends a CSW GetRecords request to the local CSW service.
    * @param cswRequest the CSW XML request
@@ -289,51 +298,50 @@ public class SearchEngineLocal extends SearchEngineCSW {
   protected CswRecords sendRequest(String cswRequest) throws SearchException {
     try {
       LOGGER.log(Level.FINER, "Executing local CSW 2.0.2 Discovery request:\n{0}", cswRequest);
-    
-      LOGGER.log(Level.FINER, "suma :\n{0}", "in side sendRequest: " + cswRequest);
-       
+      
+      //LOGGER.log(Level.INFO, "Executing local CSW 2.0.2 Discovery request:\n{0}", "in side sendRequest, cswRequest: " + cswRequest);
       boolean isSitemapRequest = false;
       Object obj = this.getRequestContext().getObjectMap().get("com.esri.gpt.catalog.search.isSitemapRequest");
       if ((obj != null) && (obj instanceof String)) {
         isSitemapRequest = ((String)obj).equalsIgnoreCase("true");
       }
-      
+
       IRequestHandler handler = new com.esri.gpt.server.csw.provider.local.ProviderFactory().newHandler(this.getRequestContext());
       OperationResponse resp = handler.handleXML(cswRequest);
       String cswResponse = resp.getResponseXml();
-      
-      LOGGER.log(Level.FINER, "cswResponse:\n{0}", cswResponse);
-      
+
+      //LOGGER.log(Level.INFO, "cswResponse:\n{0}", "in side sendRequest, cswResponse: " + cswResponse);
+
       //return this.parseResponse(cswResponse);
-      
+
       CswRecords parsedRecords = null;
       if (!isSitemapRequest) {
         parsedRecords = this.parseResponse(cswResponse);
       } else {
         parsedRecords = this.parseResponseForSitemap(cswResponse);
       }
-      
+
       return parsedRecords;
-      
+
     } catch (Exception e) {
       throw new SearchException("Error quering GetRecords: "+e.getMessage(),e);
     }
   }
-  
+
   /**
    * Gets the abstract associated with the key
-   * 
+   *
    * @return the abstract
    * @throws SearchException
    */
   @Override
   public String getKeyAbstract() throws SearchException {
-    
+
     Map<String, String> map = this.getFactoryAttributes();
     String absKey = null;
     if(map != null) {
        absKey = map.get("abstractResourceKey");
-    } 
+    }
     if(absKey == null || "".equals(absKey.trim())) {
       absKey  = "catalog.search.searchSite.defaultsite.abstract";
     }
@@ -341,9 +349,9 @@ public class SearchEngineLocal extends SearchEngineCSW {
     bundle.setBundleBaseName(MessageBroker.DEFAULT_BUNDLE_BASE_NAME);
     return bundle.retrieveMessage(absKey);
   }
-  
-  /** 
-   * 
+
+  /**
+   *
    * Creates instances
    *@param rids
    *@return Map with engine
@@ -357,11 +365,11 @@ public class SearchEngineLocal extends SearchEngineCSW {
         engine.setKey(rid);
         mapRid2Engine.put(rid, engine);
       } catch (SearchException e) {
-        mapRid2Engine.put(rid,"Error while intializing id " + rid + " " 
+        mapRid2Engine.put(rid,"Error while intializing id " + rid + " "
             + e.getMessage());
         LOGGER.log(Level.WARNING,"Error while intializing id " + rid,e);
       }
-      
+
     }
     return mapRid2Engine;
   }

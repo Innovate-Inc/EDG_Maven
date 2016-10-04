@@ -4,9 +4,7 @@
  Esri Inc. licenses this file to You under the Apache License, Version 2.0
  (the "License"); you may not use this file except in compliance with
  the License.  You may obtain a copy of the License at
-
      http://www.apache.org/licenses/LICENSE-2.0
-
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +17,6 @@
 <%
   com.esri.gpt.framework.jsf.MessageBroker msg = 
     (new com.esri.gpt.framework.jsf.FacesContextBroker(request,response)).extractMessageBroker();
-
   String namespace = "gpt";
   String cssNamespace = "gpt";
   String caption = msg.retrieveMessage("catalog.widget.search.caption");
@@ -65,7 +62,6 @@
 %>
 
 <%!
-
 	/**
 	 * Converts a string to an int value.
 	 * @param s the string to convert
@@ -81,7 +77,6 @@
 	  }
 	  return n;
 	}
-
   /**
    * Check a string value.
    * @param s the string to check
@@ -91,7 +86,6 @@
     if (s == null) return "";
     else return s.trim();
   }
-
 %>
 
 // load the Dojo framework
@@ -744,5 +738,3 @@ function <%=fStartup%>() {
 	});
 
 }
-
-

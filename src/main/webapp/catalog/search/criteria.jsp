@@ -29,7 +29,8 @@
 		String schHasSearchHint = com.esri.gpt.framework.util.Val.chkStr(schParameters.getValue("catalog.searchCriteria.hasSearchHint"));
 		hasSearchHint = Boolean.valueOf(schHasSearchHint);
 	}
-	String schHintPrompt = schMsgBroker.retrieveMessage("catalog.searchCriteria.hintSearch.prompt");
+	//String schHintPrompt = schMsgBroker.retrieveMessage("catalog.searchCriteria.hintSearch.prompt");
+	String schHintPrompt = "";
 	String PROD = "prod";
 %>
 
@@ -42,6 +43,11 @@
 <% // date picker support %>
 <gpt:DatePickerConfig/>
 
+<gpt:jscriptVariable
+  id="innoRoleAnonymous"
+  quoted="true"
+  value="#{PageContext.roleMap['anonymous']}"
+  variableName="innoRoleAnonymous"/>
 <% // scripting functions %>
 <f:verbatim>
 
@@ -55,6 +61,28 @@
 
  <script type="text/javascript">
     // &filter parameter based on window.location.href
+	function chkSearchSynonymClick(elCheckBox) {
+	    if (elCheckBox != null) {
+			var bChecked = elCheckBox.checked;
+			//alert(bChecked);
+			if (bChecked) {
+				hasSearchHint = false;
+				$("#hints").hide();
+		}
+			else {
+				hasSearchHint = true;
+				$("#hints").show();
+			}
+	    }
+		
+		var scText = GptUtils.valChkStr(dojo.byId('frmSearchCriteria:scText').value);
+        if (scText.length > 0) {
+			javascript:scSetPageTo(1); 
+			scExecuteDistributedSearch(); 
+			
+		}
+		return false;
+	}
     function scAppendExtendedFilter(sUrlParams,bIsRemoteCatalog) {
       if (bIsRemoteCatalog == false) {
         var f = scGetExtendedFilter();
@@ -141,7 +169,10 @@
         }
       }
     );
- 
+      // Preloading the search gif
+      var img = new Image();
+      //img.src = dojo.byId("/catalog/images/loading.gif");
+      //scInitDistrPane();
     }
   );
 
@@ -179,7 +210,9 @@
         scMap.zoomAnywhere();
       }
     }
-
+    function scOnMyClicked() {
+alert("test");
+    }
 
     var _scRdbIndex = null;
     var _scRpsIndex = null;
@@ -316,9 +349,7 @@
 	    } else {
 	    	dojo.byId("frmSearchCriteria:mapToolbar").style.display = "block";
 	    }
-        
         dojo.query("#frmSearchCriteria\\:zoomGroup").style("display",jsMetadata.records.length>0? "block": "none");
-        
         if (scMap) {
           scMap.reposition();
         }
@@ -407,7 +438,8 @@
      con
      }
         var obj = new Object();
-        if(typeof(csExteriorRepositories[i].name) == 'undefined') {
+        if(typeof(csExteriorRepositories[i].name) == 'undefined'
+          || typeof(csExteriorRepositories[i].uuid) == 'undefined') {
           continue;
         }
         obj.name = csExteriorRepositories[i].name;
@@ -835,13 +867,25 @@
     var contentDateQuery = makeContentDateQuery();
     if (contentDateQuery.length>0) {
       if (scText.length > 0) {
-      	//scText = "+("+scText+") +("+contentDateQuery+")";
+		var check = dojo.byId("frmSearchCriteria:searchSynonym");
+		var enabled = check!=null? check.checked: false;
+		if (enabled) {
+			scText = "like|" + scText;
+		}
       	scText = "("+scText+") AND ("+contentDateQuery+")";
       } else {
         scText = contentDateQuery;
       }
     }
-    if (scText != "") restParams += "&searchText="+ encodeURIComponent(scText);
+    if (scText != "") {
+		var check = dojo.byId("frmSearchCriteria:searchSynonym");
+		var enabled = check!=null? check.checked: false;
+		if (enabled) {
+			scText = "like|" + scText;
+		}
+
+		restParams += "&searchText="+ encodeURIComponent(scText);
+	}
 
     // &filter parameter based on window.location.href
     restParams = scAppendExtendedFilter(restParams,bIsRemoteCatalog);
@@ -1060,6 +1104,9 @@
         aoiMaxX = parseInt(tmpAoiMaxX);
         aoiMaxY = parseInt(tmpAoiMaxY);
         aoiWkid = parseInt(tmpAoiWkid);
+        innoFixRestIntraLinks();
+        innoGetCsvAnchors();
+        innoHookupAnchors();
        
         dojo.query("#frmSearchCriteria\\:zoomGroup").style("display",jsMetadata.records.length>0? "block": "none");
       }),
@@ -1484,6 +1531,10 @@
 
 
   </script>
+  <script type="text/javascript" src="../../catalog/js/inno/metrics.js"></script>
+  <script type="text/javascript">
+		dojo.addOnLoad(innoHookupAnchors);
+   </script>
 </f:verbatim> 
 
 <gpt:jscriptVariable 
@@ -1610,31 +1661,50 @@
   
 
 <% // search text and submit button %>
-<h:panelGrid columns="4">
+    <table style="width:450px">
+        <tbody>
+            <tr>
+                <td>
   <h:outputLabel for="scText" value="#{gptMsg['catalog.search.search.lblSearch']}"/>
   <h:inputText id="scText"
                value="#{SearchController.searchCriteria.searchFilterKeyword.searchText}"
-               maxlength="4000" styleClass="searchBox" />
+               maxlength="4000" styleClass="searchBox"/>
+                </td>
+                <td>
   <h:commandButton id="btnDoSearch" rendered="true"
-                   onclick="javascript:scSetPageTo(1); scExecuteDistributedSearch(); return false;"
+                   onclick="javascript:scSetPageTo(1); scExecuteDistributedSearch(); return false;" 
                    value="#{gptMsg['catalog.search.search.btnSearch']}"
                    action="#{SearchController.getNavigationOutcome}"
                    actionListener="#{SearchController.processAction}">
+                   
     <f:attribute name="#{SearchController.searchEvent.event}"
                  value="#{SearchController.searchEvent.eventExecuteSearch}" />
     <f:attribute name="onSearchPage" value="true"/>
   </h:commandButton>
+                </td>
+                <td>
   <h:graphicImage
     id="loadingGif" 
     style="visibility: hidden;"
     url="/catalog/images/loading.gif" alt="" 
     width="30px">
   </h:graphicImage>
-   <f:verbatim>
-   	<div id="hints"></div>
-   </f:verbatim>
-</h:panelGrid> 
-
+                </td>
+            </tr>
+			<tr>
+				<td>
+                    <h:selectBooleanCheckbox id="searchSynonym" title="Check to expand search results to include acronyms, synonyms, and other terms related to your search string"  onclick="javascript:chkSearchSynonymClick(this);"/>
+					<h:outputLink  value="" onclick="window.open('http://www.epa.gov/research/epa-science-vocabulary', '')"><h:outputText value="Include related terms" /></h:outputLink >
+                </td>
+            </tr>
+            <tr>
+                <td colspan="1">
+					<div id="hints"></div>
+                </td>
+            </tr>
+        </tbody>
+    </table> 
+ 
 <h:panelGroup id="dockDistributedSearch" rendered="#{SearchController.searchConfig.allowExternalSearch == true}">
   <f:verbatim>
     <div id="djtCntDistributedSearches" class="section" style="width:400px">
@@ -1642,7 +1712,7 @@
         <table width="100%">
           <tr>
             <td/>
-            <td valign="top"><img id="djtCntDistributedSearchesImg" alt="" src="../images/section_closed.gif"/></td>
+            <td valign="top"><img id="djtCntDistributedSearchesImg" alt="" src="/metadata/catalog/images/section_closed.gif"/></td>
             <td>
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr><td id="djtCntDistributedSearchesTitle" class="sectionCaption"/></tr>
@@ -1676,12 +1746,16 @@
 </h:panelGroup>
 
 <h:outputText id="brkscLnkAdditionals" escape="false" rendered="true" value="<br/>"/>
-<h:outputLink id="scLnkAdditionals" onclick="javascript:scShowDialog('crtAdvOptnsContent', true)" value="javascript:void(0)">
+<h:outputLink id="scLnkAdditionals" 
+              onclick="javascript:scShowDialog('crtAdvOptnsContent', true)" value="javascript:void(0)">
   <h:outputText escape="false" value="#{gptMsg['catalog.search.additionalOptions']}" />
 </h:outputLink>
-<h:outputText id="txtClearHtml" escape="false" value="<span style='margin-left:20px;'></span>"/>
-<h:outputLink value="#" onclick="javascript:scDoAjaxSearch(true); return false;">
-  <h:outputText escape="false" value="#{gptMsg['catalog.search.search.btnReset']}" />
+<h:outputText id="txtClearHtml" escape="false" value="<br/>"/>
+<h:outputLink
+  value="#"
+  onclick="javascript:scDoAjaxSearch(true); return false;">
+  <h:outputText escape="false" 
+    value="#{gptMsg['catalog.search.search.btnReset']}" />
 </h:outputLink>
 
 <h:outputText id="dockNoContentDateSearch" escape="false" value="<div style='margin-top:20px;'></div>"
@@ -1773,7 +1847,8 @@
 
   <% // map %>
   <h:panelGrid id="pnlMap">
-    <h:panelGroup id="mapToolbar" styleClass="mapToolbar" style="display:none">
+    <h:panelGroup id="mapToolbar" styleClass="mapToolbar"  style="display:none">
+          <h:panelGroup id="mapToolbar" styleClass="mapToolbar" style="display:none">
       <% // List of predefined extents %>
       <h:selectOneMenu id="scSel"
                      rendered="#{not empty SearchController.searchCriteria.searchFilterSpatial.predefinedExtents}"
@@ -1785,6 +1860,7 @@
           <f:selectItems value="#{SearchController.searchCriteria.searchFilterSpatial.predefinedExtents}"/>
       </h:selectOneMenu>
       <h:outputText id="brksc" escape="false" value="<br/>"/>
+      
       <h:outputLabel for="mapInput-locate" value="#{gptMsg['catalog.search.search.lblLocator']}"/>
       <h:inputText id="mapInput-locate" styleClass="locatorInput"
                    maxlength="1024" onkeypress="return scMap.onLocatorKeyPress(event);"/>

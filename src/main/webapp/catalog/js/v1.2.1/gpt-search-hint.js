@@ -35,6 +35,7 @@ $(document).ready(function(){
 		var nCountMatches = 0;
 		
 		if (searchText.length>=2) {
+
 			jQuery.each(Hints, function() {
 		  	  if (this.name.indexOf(searchText)>-1) {
 		  		  if (nCountMatches < nMaxMatches) {

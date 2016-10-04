@@ -5,27 +5,71 @@
 <%@taglib prefix="f" uri="http://java.sun.com/jsf/core"%>
 <%@taglib prefix="h" uri="http://java.sun.com/jsf/html"%>
 <%@taglib uri="http://www.esri.com/tags-gpt" prefix="gpt"%>
-<%@page import="com.esri.gpt.framework.util.Val"%>   
+<%@page import="com.esri.gpt.framework.util.Val"%>  
 <%
+
 String responseBody = "";
 //String site = "http://localhost:8080";
 String site = "https://edg.epa.gov";
-String url = site + "/metadata/rest/find/document?searchText=usgs&start=1&max=1750&f=json";
-int nTagCount = 140;
-JSONObject obj=null;
+String featuredTab1Title = "Climate Change";
+String featuredTab2Title = "Environmental Justice";
+String featuredTab3Title = "Facility Data";
+String urlSuffix = "&start=1&max=6&f=json";
+String baseURL = "/metadata/rest/find/document?searchText=";
+String popURL = "/metadata/rest/find/document?";
+/**Climate Change URL**/
+String featuredTab1SearchStr = "sys.collection%3a%22%7b9B7778AC-DE79-287A-2A79-F05863C8A212%7d%22";
+String tab1 = site + baseURL + featuredTab1SearchStr + urlSuffix;
+/**Environmental Justice URL**/
+String featuredTab2SearchStr = "sys.collection%3a%22%7bADC0F16A-E2EB-7F86-C1FB-33CB6E726851%7d%22";
+String tab2 = site + baseURL + featuredTab2SearchStr + urlSuffix;
+/**Facility Data URL**/
+String featuredTab3SearchStr = "sys.collection%3a%22%7bD5F39F59-7647-1653-DCCF-1EE6354CE412%7d%22";
+String tab3 = site + baseURL + featuredTab3SearchStr + urlSuffix;
+/**Populat Datasets URL**/
+String popDataUrl = site + popURL + "childrenof=%7B9007D9FF-E18F-9A91-564F-5C4FF3FAB904%7D" + urlSuffix;
 
 HttpClientRequest client = new HttpClientRequest();
-client.setUrl(url);
+
+JSONObject cliChobj=null;
+client.setUrl(tab1);
 try{
     responseBody =  client.readResponseAsCharacters();
-    obj = new JSONObject(responseBody);
-    
-    //System.out.println("Result JSON Object::"+obj);
+    cliChobj = new JSONObject(responseBody);
+   
    }catch(Exception e){
-    //LOG.log(Level.SEVERE, "in SearchCriteria getTagscloud:", e);
     e.printStackTrace();
 }
 
+JSONObject ejobj=null;
+client.setUrl(tab2);
+try{
+    responseBody =  client.readResponseAsCharacters();
+    ejobj = new JSONObject(responseBody);
+   
+   }catch(Exception e){
+    e.printStackTrace();
+}
+
+JSONObject fDataobj=null;
+client.setUrl(tab3);
+try{
+    responseBody =  client.readResponseAsCharacters();
+    fDataobj = new JSONObject(responseBody);
+   
+   }catch(Exception e){
+    e.printStackTrace();
+}
+
+JSONObject popobj=null;
+client.setUrl(popDataUrl);
+try{
+    responseBody =  client.readResponseAsCharacters();
+    popobj = new JSONObject(responseBody);
+    
+   }catch(Exception e){
+    e.printStackTrace();
+}
 
 %>
 <f:view>
@@ -240,11 +284,12 @@ $(document).ready(function(){
 										<div class="app-showcase wow fadeInDown" data-wow-delay=".5s">
 											<h:form id="hpFrmSearch"
 												onkeypress="javascript:hpSubmitForm(event,this);">
-												<h:inputText id="itxFilterKeywordText"
+												<h:inputText id="itxFilterKeywordText" 
 													styleClass="search-field form-control"
 													onkeypress="if (event.keyCode == 13) return false;"
 													value="#{SearchFilterKeyword.searchText}" />
-
+                                                <h:inputHidden id="start" value="1" />
+												<h:inputHidden id="max" value="10" />
 												<h:commandLink id="btnDoSearch"
 													value="#{gptMsg['catalog.search.search.advBtnSearch']}"
 													action="#{SearchController.getNavigationOutcome}"
@@ -322,12 +367,18 @@ $(document).ready(function(){
 					    return true;
 					  }
 					}
-				function executeSearchAction(){
+				function executeSearchAction(searchText){
+				    searchText=decodeURIComponent(searchText);
 					var textEle=document.getElementById('hpFrmSearch:itxFilterKeywordText');
-					textEle.value="usgs";
-					 var searchButtonId = "hpFrmSearch:btnDoSearch";
-					 var searchButton = document.getElementById(searchButtonId);
-					 searchButton.click();
+					var startEle=document.getElementById('hpFrmSearch:start');
+					var maxEle=document.getElementById('hpFrmSearch:max');
+					textEle.value=searchText;
+					/*start and max values will vary*/
+					startEle.value="7";
+					maxEle.value="100";
+					var searchButtonId = "hpFrmSearch:btnDoSearch";
+					var searchButton = document.getElementById(searchButtonId);
+					searchButton.click();
 					   
 				}
 				</script></f:verbatim>
@@ -356,10 +407,9 @@ $(document).ready(function(){
 							<h2>Featured Data Products</h2>
 							<ul class="nav nav-tabs">
 								<li class="active"><a data-toggle="tab"
-									href="#climateChange">Climate Change</a></li>
-								<li><a data-toggle="tab" href="#envJustice">Environmental
-										Justice</a></li>
-								<li><a data-toggle="tab" href="#facData">Facility Data</a></li>
+									href="#climateChange"><%=featuredTab1Title%></a></li>
+								<li><a data-toggle="tab" href="#envJustice"><%=featuredTab2Title%></a></li>
+								<li><a data-toggle="tab" href="#facData"><%=featuredTab3Title%></a></li>
 							</ul>
 
 							<div class="tab-content">
@@ -369,7 +419,7 @@ $(document).ready(function(){
 										<%
 											try {
 
-													JSONArray arr = obj.getJSONArray("records");
+													JSONArray arr = cliChobj.getJSONArray("records");
 													int counter = 0;
 													for (int i = 0; i < arr.length(); i++) {
 														JSONObject record = arr.getJSONObject(i);
@@ -396,8 +446,7 @@ $(document).ready(function(){
 											target="_blank">
 											<div class="col-md-2">
 												<div class="thumbnail">
-													<img src="<%=hrefDet%>" data-toggle="tooltip" alt=""
-														height="60" width="60" title="<%=title%>">
+													<img src="<%=hrefDet%>" data-toggle="tooltip" alt="" title="<%=title%>">
 													<div class="caption" style="word-wrap: break-word; font-size:14px;"><%=title%></div>
 												</div>
 											</div>
@@ -413,7 +462,7 @@ $(document).ready(function(){
 									</div>
 									<div class="col-md-12 col-sm-12 text-right">
 										<p>
-											<a href="javascript: void(0)" onclick="javascript:executeSearchAction()">See More</a>
+											<a href="javascript: void(0)" onclick="javascript:executeSearchAction('<%=featuredTab1SearchStr%>')">See More</a>
 										</p>
 										<p></p>
 									</div>
@@ -424,7 +473,7 @@ $(document).ready(function(){
 										<%
 											try {
 
-													JSONArray arr = obj.getJSONArray("records");
+													JSONArray arr = ejobj.getJSONArray("records");
 													int counter = 0;
 													for (int i = 0; i < arr.length(); i++) {
 														JSONObject record = arr.getJSONObject(i);
@@ -451,8 +500,7 @@ $(document).ready(function(){
 											target="_blank">
 											<div class="col-md-2">
 												<div class="thumbnail">
-													<img src="<%=hrefDet%>" data-toggle="tooltip" alt=""
-														height="60" width="60" title="<%=title%>">
+													<img src="<%=hrefDet%>" data-toggle="tooltip" alt="" title="<%=title%>">
 													<div class="caption" style="word-wrap: break-word; font-size:14px;"><%=title%></div>
 												</div>
 											</div>
@@ -468,7 +516,7 @@ $(document).ready(function(){
 									</div>
 									<div class="col-md-12 col-sm-12 text-right">
 										<p>
-											<a href="javascript: void(0)" onclick="javascript:executeSearchAction()">See More</a>
+											<a href="javascript: void(0)" onclick="javascript:executeSearchAction('<%=featuredTab2SearchStr%>')">See More</a>
 										</p>
 										<p></p>
 									</div>
@@ -479,7 +527,7 @@ $(document).ready(function(){
 										<%
 											try {
 
-													JSONArray arr = obj.getJSONArray("records");
+													JSONArray arr = fDataobj.getJSONArray("records");
 													int counter = 0;
 													for (int i = 0; i < arr.length(); i++) {
 														JSONObject record = arr.getJSONObject(i);
@@ -506,8 +554,7 @@ $(document).ready(function(){
 											target="_blank">
 											<div class="col-md-2">
 												<div class="thumbnail">
-													<img src="<%=hrefDet%>" data-toggle="tooltip" alt=""
-														height="60" width="60" title="<%=title%>">
+													<img src="<%=hrefDet%>" data-toggle="tooltip" alt="" title="<%=title%>">
 													<div class="caption" style="word-wrap: break-word; font-size:14px;"><%=title%></div>
 												</div>
 											</div>
@@ -523,7 +570,7 @@ $(document).ready(function(){
 									</div>
 									<div class="col-md-12 col-sm-12 text-right">
 										<p>
-											<a href="javascript: void(0)" onclick="javascript:executeSearchAction()">See More</a>
+											<a href="javascript: void(0)" onclick="javascript:executeSearchAction('<%=featuredTab3SearchStr%>')">See More</a>
 										</p>
 										<p></p>
 									</div>
@@ -578,13 +625,13 @@ $(document).ready(function(){
 								</div>
 							</div>
 						</section> --%>
-					<div class="container">
+				<div class="container">
 						<h2>Popular Datasets</h2>
 									<div class="row" style="padding-top: 22px">
 										<%
 											try {
 
-													JSONArray arr = obj.getJSONArray("records");
+													JSONArray arr = popobj.getJSONArray("records");
 													int counter = 0;
 													for (int i = 0; i < arr.length(); i++) {
 														JSONObject record = arr.getJSONObject(i);
@@ -611,8 +658,7 @@ $(document).ready(function(){
 											target="_blank">
 											<div class="col-md-2">
 												<div class="thumbnail">
-													<img src="<%=hrefDet%>" data-toggle="tooltip" alt=""
-														height="60" width="60" title="<%=title%>">
+													<img src="<%=hrefDet%>" data-toggle="tooltip" alt="" title="<%=title%>">
 													<div class="caption" style="word-wrap: break-word; font-size:14px;"><%=title%></div>
 												</div>
 											</div>
@@ -628,15 +674,12 @@ $(document).ready(function(){
 									</div>
 												<div class="col-md-12 col-sm-12 text-right">
 										<p>
-											<a href="javascript: void(0)" onclick="javascript:executeSearchAction()">See More</a>
+											<a href="javascript: void(0)" onclick="javascript:executeSearchAction('Environmental Dataset Gateway GeoRSS')">See More</a>
 										</p>
 										<p></p>
 									</div>
-									</div>
-						
-
-					</div>
-				</div>
+									</div> 
+									
 												
 						<section id="feature">
 							<div class="container">
@@ -686,6 +729,16 @@ $(document).ready(function(){
 														<li><a
 															href="https://project-open-data.cio.gov/schema/">Project
 																Open Data Metadata Schema</a></li>
+														
+														<li><a href="/metadata/webhelp/en/gptlv10/inno/EDG_ClipAndShip_procedures.pdf" target = "_blank">
+																How to Post Data to EDG Clip N Ship (PDF)</a></li>
+																
+														<li><a href="/metadata/webhelp/en/gptlv10/inno/EDG_Download_Locations.pdf" target = "_blank">
+														How to Post Data to EDG Download Sites (PDF)</a></li>
+														
+														<li><a href="/metadata/webhelp/en/gptlv10/inno/Stewards/Stewards.html" target = "_blank">
+														List of EDG Stewards (opens new window)</a></li>		
+														
 													</ul>
 												</div>
 											</div>
@@ -807,13 +860,13 @@ $(document).ready(function(){
 						id="mainHome" action="catalog.main.home"
 						value="#{gptMsg['catalog.main.home.menuCaption']}"
 						styleClass="menu-link" /></li>
-				<li class="menu-item" id="menu-scitech" role="presentation">
-					<%-- styleClass="#{PageContext.tabStyleMap['catalog.content.about']}" --%>
+			<%-- 	<li class="menu-item" id="menu-scitech" role="presentation">
+					styleClass="#{PageContext.tabStyleMap['catalog.content.about']}"
 					<h:commandLink id="contentAbout" action="catalog.content.about"
 						value="#{gptMsg['catalog.content.about.menuCaption']}"
 						styleClass="menu-link" title="About the EDG" />
 
-				</li>
+				</li> --%>
 				<li class="menu-item" id="menu-lawsregs" role="presentation"><h:commandLink
 						id="searchHome" action="catalog.search.home"
 						value="#{gptMsg['catalog.search.home.menuCaption']}"
@@ -947,7 +1000,7 @@ $(document).ready(function(){
 									and Security Notice</a></li>
 							<li><a href="https://www2.epa.gov/accessibility">Accessibility</a></li>
 						</ul>
-						<p class="last-updated">{LAST UPDATED DATE}</p>
+						<!-- <p class="last-updated">{LAST UPDATED DATE}</p> -->
 					</div>
 					<div class="col size-3of5">
 						<ul class="menu epa-menu">

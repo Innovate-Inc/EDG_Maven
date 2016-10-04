@@ -699,6 +699,7 @@ protected SearchResultRecord marshallRecord(
   SearchResultRecord searchResultRecord = new SearchResultRecord();
   searchResultRecord.setExternal(this.readIsExternalSearch());  
   searchResultRecord.setAbstract(cswRecord.getAbstractData());
+  searchResultRecord.setFullDescription(cswRecord.getAbstractData());
   searchResultRecord.setTitle(cswRecord.getTitle());
   searchResultRecord.setExternalId(this.getKey());
   searchResultRecord.setDefaultGeometry(cswRecord.isDefaultGeometry());
@@ -1001,6 +1002,7 @@ private void initAttributes() throws SearchException {
 public boolean canSearchEndPoint(String endPoint, String endPointData,
                SearchPointOptions options )
     throws SearchPointOptionsException {
+
   return false;
 }*/
 

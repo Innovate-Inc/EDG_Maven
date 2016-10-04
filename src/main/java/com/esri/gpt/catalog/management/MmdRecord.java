@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.esri.gpt.catalog.management;
-
+package com.esri.gpt.catalog.management; 
+     
 import com.esri.gpt.catalog.harvest.repository.HrRecord.HarvestFrequency;
 import com.esri.gpt.catalog.harvest.repository.HrRecord.RecentJobStatus;
 import com.esri.gpt.control.webharvest.DefaultIterationContext;
@@ -28,7 +28,7 @@ import com.esri.gpt.framework.util.UuidUtil;
 import com.esri.gpt.framework.util.Val;
 import java.sql.Timestamp;
 import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.Map; 
 
 /**
  * Represents a metadata record associated with a manage metadata request.
@@ -70,7 +70,7 @@ public class MmdRecord extends Record {
   private boolean synchronizable;
   
   private Map<String, Object> _objectMap = new LinkedHashMap<String, Object>();
-
+  private String _schemaKey;
 // constructors ================================================================
   /** Default constructor. */
   public MmdRecord() {
@@ -427,7 +427,24 @@ public class MmdRecord extends Record {
   public void setLastHarvestDate(Timestamp lastHarvestDate) {
     this._lastHarvestDate = lastHarvestDate;
   }
+  
+  /**
+   * Gets schema key - JSS: 20110325
+   * @return schemaKey
+   */
+  public String getSchemaKey() {
+      return _schemaKey;
+  }
 
+  /**
+   * Sets schema key - JSS 20110325
+   * @param schemaKey
+   */
+  public void setSchemaKey(String schemaKey) {
+      this._schemaKey = schemaKey;
+  }
+
+  /**
   /**
    * Gets recent job status.
    * @return recent job status

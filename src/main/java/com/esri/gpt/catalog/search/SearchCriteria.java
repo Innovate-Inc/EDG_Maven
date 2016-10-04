@@ -24,9 +24,18 @@ import java.util.Set;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.servlet.http.HttpServletRequest;
+import com.esri.gpt.framework.context.ApplicationContext;
+import com.esri.gpt.framework.context.RequestContext;
+import com.esri.gpt.framework.jsf.BaseActionListener;
+import com.esri.gpt.framework.jsf.FacesContextBroker;
+import com.esri.gpt.framework.jsf.MessageBroker;
+
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.NavigableMap;
+import java.util.Properties;
 import java.util.Collections;  
 import java.util.Iterator;
 import java.util.HashMap;
@@ -54,6 +63,7 @@ import com.esri.gpt.framework.http.HttpClientRequest;
 public class SearchCriteria extends QueryCriteria {
 
 // class variables =============================================================
+private FacesContextBroker _contextBroker = new FacesContextBroker();
 /** The tag cloud */
 private Map<String, Object> _frequencyMap = new LinkedHashMap<String, Object>();
     
@@ -83,6 +93,12 @@ private final static String ATTRIB_SAVEDSEARCH_NAME = "savedSearchName";
 
 /** Element for saved states **/
 private final static String ELEM_SAVEDSTATES = "savedStates";
+private static final Logger LOGGER = Logger.getLogger(SearchCriteria.class.getName());
+
+protected FacesContextBroker getContextBroker()
+   {
+    return this._contextBroker;
+  }
 
 /**
  * Where to save the search criteria to.
@@ -179,7 +195,8 @@ public SearchCriteria(SearchCriteria criteria) throws SearchException {
  */
 public ArrayList<ArrayList<String>> getTagscloud() {
      ArrayList<ArrayList<String>> tagList = new ArrayList<ArrayList<String>>();
-     
+   
+     LOG.info("in SearchCriteria getTagscloud:tagList"+tagList);
 
     if(_frequencyMap == null) {
       _frequencyMap = new LinkedHashMap<String, Object>();
@@ -190,11 +207,16 @@ public ArrayList<ArrayList<String>> getTagscloud() {
     String responseBody = "";
     String site = "http://localhost:8080";
     //String site = "https://edg-staging.epa.gov";
-    String url = site + "/metadata/rest/index/stats/fields?field=keywords&maxRecords=10000&f=json";
+    //LOG.info("site:"+site);
+    HttpServletRequest request = this.getContextBroker().extractHttpServletRequest();
+    String url =  request.getScheme()+"://"+ request.getServerName()+":"+request.getServerPort()+"/metadata/rest/index/stats/fields?field=keywords&maxRecords=10000&f=json";
+   
+    LOG.info("url:"+url);
     int nTagCount = 140;
 
     HttpClientRequest client = new HttpClientRequest();
     client.setUrl(url);
+    LOG.info("client:"+client);
     try{
         responseBody =  client.readResponseAsCharacters();
         JSONObject obj = new JSONObject(responseBody);

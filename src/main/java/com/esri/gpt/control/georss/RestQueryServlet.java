@@ -14,6 +14,7 @@
  */
 package com.esri.gpt.control.georss;
 
+import com.esri.gpt.catalog.discovery.DiscoveryClause;
 import com.esri.gpt.catalog.discovery.SpatialClause;
 import com.esri.gpt.catalog.discovery.rest.RestQuery;
 import com.esri.gpt.catalog.discovery.rest.RestQueryParser;
@@ -42,17 +43,12 @@ import com.esri.gpt.control.georss.dcatcache.DcatCache;
 import com.esri.gpt.control.georss.dcatcache.DcatCacheUpdateRequest;
 import com.esri.gpt.framework.context.BaseServlet;
 import com.esri.gpt.framework.context.RequestContext;
+import com.esri.gpt.framework.geometry.Envelope;
 import com.esri.gpt.framework.jsf.FacesContextBroker;
 import com.esri.gpt.framework.jsf.MessageBroker;
 import com.esri.gpt.framework.util.Val;
 //import com.esri.gpt.server.csw.provider.local.CoreQueryables;
 import com.esri.gpt.server.csw.components.CoreQueryables;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -129,6 +125,16 @@ public class RestQueryServlet extends BaseServlet {
       query = new RestQuery();
     }
 
+ // validate spatial clause
+    for (DiscoveryClause clause: query.getFilter().getRootClause().getClauses()) {
+      if (clause instanceof SpatialClause) {
+        Envelope env = ((SpatialClause)clause).getBoundingEnvelope();
+        if (!env.isEmpty() && !env.isValidWGS84()) {
+          response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+          return;
+        }
+      }
+    }
 
     // establish the response content type, print writer and feed writer
     RestQueryServlet.ResponseFormat format = getResponseFormat(request, query);
@@ -164,11 +170,9 @@ public class RestQueryServlet extends BaseServlet {
 
         // init query
        /* query.setReturnables(new CoreQueryables(context).getFull());
-        toSearchCriteria(request, context, query);
-        
-        
+        toSearchCriteria(request, context, query);             
         feedWriter.write(JsonSearchEngine.createInstance().search(request, response, context, query));*/
-
+        feedWriter.write(result);
         if (callback != null) {
           printWriter.print(")");
         }
@@ -297,7 +301,7 @@ public class RestQueryServlet extends BaseServlet {
       // generate the CSW request string
       String cswRequest = "";
       try {
-        GetRecordsGenerator grg = new GetRecordsGenerator();
+        GetRecordsGenerator grg = new GetRecordsGenerator(); 
         cswRequest = grg.generateCswRequest(query);
       } catch (Exception e) {
         throw new SearchException(e);
@@ -563,7 +567,7 @@ public class RestQueryServlet extends BaseServlet {
               messageBroker, printWriter, query.getRssProviderUrl(), query.getRssSourceUrl());
       rssWriter.setTarget(target);
       String responseGeometry = query.getResponseGeometry();
-      rssWriter.setGeometry(GeorssFeedWriter.Geometry.checkValueOf(responseGeometry));
+      rssWriter.setGeometry(GeorssFeedWriter.Geometry.checkValueOf(responseGeometry,GeorssFeedWriter.Geometry.esriGeometryPolygon));
       return rssWriter;
     }
 
